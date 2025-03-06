@@ -1,0 +1,10 @@
+# Ignorowanie plików cache Pythona
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignorowanie plików CSV
+*.csv
+
+# Ignorowanie folderu test
+test/
