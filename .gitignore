@@ -8,3 +8,5 @@ __pycache__/
 
 # Ignorowanie folderu test
 test/
+
+*.plk

@@ -17,7 +17,10 @@ import xgboost as xgb
 import math
 import whois
 from datetime import datetime
+import os.path
+from settings import __SETTINGS__
 
+global_sets = __SETTINGS__
 
 ##Style prediction class
 
@@ -43,7 +46,7 @@ class UStyle:
         y = df['money_style']
         print(df['money_style'].value_counts())
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=37)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True, random_state=42)
 
         model = xgb.XGBClassifier(objective="multi:softmax", num_class=len(y.unique()), n_estimators=70, learning_rate=0.1, max_depth=3, random_state=42)
 
@@ -54,8 +57,22 @@ class UStyle:
 
         print(f'Dokładność modelu: {accuracy:.4f}')
 
-        new_data = pd.DataFrame([[-0.5, 1, 0, 3, 55, 7, 0]], columns=X.columns)
-        prediction = model.predict(new_data)
+        joblib.dump(model, global_sets['ustyle_model_path'])
+
+        return model
+
+    def Predict(self, data):
+        df = self.df
+        X = df.drop(columns=['money_style'])
+        data = pd.DataFrame(data, columns=X.columns)
+
+        model = None
+
+        if not os.path.isfile(global_sets['ustyle_model_path']):
+            model = self.StartTraining()
+        else:
+            model = joblib.load(global_sets['ustyle_model_path'])
         
-        
+        prediction = model.predict(data)
+
         print("Przewidywany money_style:", self.__totext(prediction[0]))
