@@ -26,7 +26,7 @@ global_sets = __SETTINGS__
 
 class UStyle:
     def __init__(self):
-        self.df = pd.read_csv('../data/financial-style.csv')
+        self.df = pd.read_csv(global_sets['ustyle_data_path'])
         
         self.df['money_style'] = self.df['money_style'] - 1
 
