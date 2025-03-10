@@ -1,12 +1,13 @@
 from ustyle import UStyle
 from future_spend import FutureSpend
+import pandas as pd
 
 ustyle = UStyle()
 future_spend = FutureSpend()
+user_data = pd.read_csv('../data/user-data.csv')
 
-predicted_style = ustyle.Predict([[10, 0.4, 0.6, 1, 100, 7, 0.8]])
-
-predicted = future_spend.Predict(6500, {'month' : 1, 'year' : 2026, 'spend_style' : 0, 'spend_percent_lag1' : 64.4,'spend_percent_lag2' : 48.7})
+predicted_style = ustyle.Predict([[0.1, 0.7, 0.3, 2, 45, 7, 0.3]])
+predicted = future_spend.Predict(6500, {'month' : 12, 'year' : 2026, 'spend_style' : 2, 'spend_percent_lag1' : 65.4,'spend_percent_lag2' : 98.7}, user_data)
 
 predicted_style_txt = ''
 
@@ -21,4 +22,4 @@ match predicted_style:
         predicted_style_txt = 'N/A'
 
 print(f"📊 Styl finansowy {predicted_style_txt}")
-print(f"💲 Szacunkowe wydatki na 1 stycznia 2026: {predicted} PLN")
+print(f"💲 Szacunkowe wydatki na 1 stycznia 2026: {predicted} PLN czyli {predicted//(6500/100)}% przychodów")

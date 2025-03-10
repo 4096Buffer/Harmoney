@@ -32,20 +32,20 @@ class FutureSpend():
     def __init__(self):
         self.df = self.__loaddata()
 
-    def StartTraining(self):
+    def __getsplit(self, df):
         X, y = {}, {}
 
-        X = self.df[['month','year','spend_style','spend_percent_lag1','spend_percent_lag2', 'month_sin', 'month_cos', 'mean_spend_deviation']]
-        print(X)
-        
-        y = self.df['spend_percent']
-        tscv = TimeSeriesSplit(n_splits=5)
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X = df[['month','year','spend_style','spend_percent_lag1','spend_percent_lag2', 'month_sin', 'month_cos', 'mean_spend_deviation']]
+        y = df['spend_percent']
 
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, shuffle=True)
+
+        return X_train, X_test, y_train, y_test
+    def StartTraining(self):
+        X_train, X_test, y_train, y_test = self.__getsplit(self.df)
         model = XGBRegressor(objective='reg:squarederror', n_estimators=200, learning_rate=0.4, max_depth=4, random_state=42)
 
         model.fit(X_train, y_train)
-
         y_pred = model.predict(X_test)
 
         r2 = r2_score(y_test, y_pred)
@@ -58,7 +58,7 @@ class FutureSpend():
 
         return model
 
-    def Predict(self, income, data):
+    def Predict(self, income, data, df_tune):
         df = pd.DataFrame([data])
         model = None
 
@@ -67,8 +67,14 @@ class FutureSpend():
         else:
             model = self.StartTraining()
 
-        df = self.__addfeatures(df)
+        df_tune = self.__addfeatures(df_tune)
+        df_tune = df_tune.sort_values(by=['year', 'month'])
 
+        X_train, X_test, y_train, y_test = self.__getsplit(df_tune)
+
+        model.fit(X_train, y_train, xgb_model=model.get_booster())
+
+        df = self.__addfeatures(df)
         y_pred = model.predict(df)
 
         return round(income * y_pred[0] / 100, 2)
