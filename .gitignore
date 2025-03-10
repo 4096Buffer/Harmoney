@@ -4,8 +4,8 @@ __pycache__/
 *.pyo
 
 # Ignorowanie plików CSV
-*.csv
 
+*.csv
 # Ignorowanie folderu test
 test/
 

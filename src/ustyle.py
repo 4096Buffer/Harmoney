@@ -29,17 +29,7 @@ class UStyle:
         self.df = pd.read_csv(global_sets['ustyle_data_path'])
         
         self.df['money_style'] = self.df['money_style'] - 1
-
-    def __totext(self, prediction):
-        match prediction:
-            case 0:
-                return 'Oszczędny'
-            case 1:
-                return 'Stabilny'
-            case 2:
-                return 'Zakupoholik'
-            case _:
-                return 'N/A'
+        
     def StartTraining(self):
         df = self.df
         X = df.drop(columns=['money_style'])
@@ -75,4 +65,4 @@ class UStyle:
         
         prediction = model.predict(data)
 
-        print("Przewidywany money_style:", self.__totext(prediction[0]))
+        return prediction[0]
