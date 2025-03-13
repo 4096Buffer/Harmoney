@@ -43,7 +43,7 @@ class FutureSpend:
 
         X, y = {}, {}
 
-        df.drop(columns=["spend_percent"])
+        X = df.drop(columns=["spend_percent"])
         y = df["spend_percent"]
 
         X_train, X_test, y_train, y_test = train_test_split(

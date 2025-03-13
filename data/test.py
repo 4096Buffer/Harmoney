@@ -1,10 +1,17 @@
-with open("userdata.csv") as f:
+with open("user-data.csv") as f:
     x = f.read().splitlines()
 
 fn = ''
 
 for y in x:
-    fn += y[:-1]  + '\n'
+    s = y.split(',')
+    n = ''
+    for p in s:
+        n += p+','
+    
+    n = n[:-1]
 
-with open("months2.csv", "w") as r:
+    fn += n + '\n'
+
+with open("user-data", "w") as r:
     r.write(fn)

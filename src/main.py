@@ -1,10 +1,12 @@
 from ustyle import UStyle
 from future_spend import FutureSpend
 import pandas as pd
+from today_save import TodaySave
 
 ustyle = UStyle()
 future_spend = FutureSpend()
 user_data = pd.read_csv("../data/user-data.csv")
+
 
 # Podajemy testowane dane o użytkowniku, aby sprawdzić jak radzi sobie model w przewidywaniu stylu wydawania
 
