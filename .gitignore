@@ -5,6 +5,7 @@ __pycache__/
 
 # Ignorowanie plików CSV
 
+catboost_info/
 *.csv
 # Ignorowanie folderu test
 test/

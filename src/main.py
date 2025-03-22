@@ -1,12 +1,26 @@
 from ustyle import UStyle
 from future_spend import FutureSpend
 import pandas as pd
-from today_save import TodaySave
+from today_spend import TodaySpend
 
 ustyle = UStyle()
 future_spend = FutureSpend()
 user_data = pd.read_csv("../data/user-data.csv")
+today_spend = TodaySpend()
 
+Ad = today_spend.GetTodaySpend(
+    {
+        "month": 12,
+        "month_day": 20,
+        "year": 2026,
+        "weekday": 6,
+        "weekend": 1,
+        "spend_style": 2,
+        "spend_percent_lag1": 1.4,
+        "spend_percent_lag2": 1.9,
+    },
+    6500,
+)
 
 # Podajemy testowane dane o użytkowniku, aby sprawdzić jak radzi sobie model w przewidywaniu stylu wydawania
 
@@ -46,3 +60,4 @@ print(f"📊 Styl finansowy {predicted_style_txt}")
 print(
     f"💲 Szacunkowe wydatki na 1 stycznia 2026: {predicted} PLN czyli {predicted//(6500/100)}% przychodów"
 )
+print(f"💭 Dzisiaj powinieneś wydać nie więcej niż {Ad} PLN")
