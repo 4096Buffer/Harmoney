@@ -2,6 +2,12 @@ from ustyle import UStyle
 from future_spend import FutureSpend
 import pandas as pd
 from today_spend import TodaySpend
+from expense_type import ExpenseType
+
+
+expense_type = ExpenseType()
+
+print(expense_type.GetType("Lidl", "Polska"))
 
 ustyle = UStyle()
 future_spend = FutureSpend()
