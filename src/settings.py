@@ -5,5 +5,5 @@ __SETTINGS__ = {
     "future_spend_data_path": "../data/months.csv",
     "today_spend_data_path": "../data/days.csv",
     "today_spend_model_path": "../models/today_spend.cbm",
-    "api_key_path" : "../data/api-key.csv"
+    "api_key_path": "../data/api-key.csv",
 }

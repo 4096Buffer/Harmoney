@@ -11,3 +11,4 @@ catboost_info/
 test/
 
 *.plk
+*.cbm
