@@ -6,4 +6,6 @@ __SETTINGS__ = {
     "today_spend_data_path": "../data/days.csv",
     "today_spend_model_path": "../models/today_spend.cbm",
     "api_key_path": "../data/api-key.csv",
+    "can_afford_model_path": "../models/can_afford.cbm",
+    "can_afford_data_path": "../data/can-afford.csv",
 }

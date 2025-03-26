@@ -3,16 +3,17 @@ from future_spend import FutureSpend
 import pandas as pd
 from today_spend import TodaySpend
 from expense_type import ExpenseType
+from can_afford import CanAfford
 
-
-expense_type = ExpenseType()
-
-print(expense_type.GetType("Lidl", "Polska"))
+# Tworzymy obiekty modeli
 
 ustyle = UStyle()
 future_spend = FutureSpend()
 user_data = pd.read_csv("../data/user-data.csv")
 today_spend = TodaySpend()
+can_afford = CanAfford()
+
+# Model przewiduje dzienny wydatek i przelicza to na odpowiedni budżet
 
 Ad = today_spend.GetTodaySpend(
     {
@@ -60,8 +61,28 @@ match predicted_style:
     case _:
         predicted_style_txt = "N/A"
 
+# Testowe dane do sprawdzenia czy użytkownik jest wstanie pozwolić sobie na taki zakup
+
+test_expense = {
+    "name": "Iphone 16 Pro Max",
+    "price": 3000,
+    "location": "Łódź",
+    "spend_style": predicted_style,
+    "installments": 0,
+    "income": 6500,
+    "left_percent": 0.9,
+    "next_month": predicted,
+}
+
+# Sprawdzamy wynik modelu CanAfford
+
+ca_result = can_afford.CheckCanAfford(test_expense)
+
 # Wyniki testów modelu
 
+print(
+    f"🤔Użytkownik chce kupić {test_expense['name']} za {test_expense['price']}. Na podstawie jeszcze innych danych AI stwierdza, że użytkownik {'może dokonać zakupu.' if ca_result else 'nie powinien dokonywać zakupu.'}"
+)
 print(f"📊 Styl finansowy {predicted_style_txt}")
 print(
     f"💲 Szacunkowe wydatki na 1 stycznia 2026: {predicted} PLN czyli {predicted//(6500/100)}% przychodów"
