@@ -170,7 +170,7 @@ class FutureSpend:
 
         X_train, X_test, y_train, y_test = self.__getsplit(df_tune_new)
 
-        # model.fit(X_train, y_train, xgb_model=model.get_booster())
+        model.fit(X_train, y_train, xgb_model=model.get_booster())
 
         df = self.addfeatures(df, df_tune)
 

@@ -77,7 +77,7 @@ ca_result = can_afford.CheckCanAfford(test_expense)
 # Wyniki testów modelu
 
 print(
-    f"🤔Użytkownik chce kupić {test_expense['name']} za {test_expense['price']}. Na podstawie jeszcze innych danych AI stwierdza, że użytkownik {'może dokonać zakupu.' if ca_result else 'nie powinien dokonywać zakupu.'}"
+    f"🤔Użytkownik chce kupić {test_expense['name']} za {test_expense['price']}zł. Na podstawie jeszcze innych danych AI stwierdza, że użytkownik {'może dokonać zakupu.' if ca_result else 'nie powinien dokonywać zakupu.'}"
 )
 print(f"📊 Styl finansowy {predicted_style_txt}")
 print(
