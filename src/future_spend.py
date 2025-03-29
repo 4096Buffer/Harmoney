@@ -16,22 +16,84 @@ class FutureSpend:
         # Wczytanie danych treningowych, dodanie cech i sortowanie wg roku i miesiąca
 
         df = pd.read_csv(global_sets["future_spend_data_path"])
-        df = self.__addfeatures(df)
-        df = df.sort_values(by=["year", "month"])
+        df = self.addfeatures(df)
 
         return df
 
-    def __addfeatures(self, df):
+    def addfeatures(self, df, df_tune=None):
         # Dodanie dodatkowych cech w celu zwiększenia dokładności modelu
 
-        df["month_sin"] = np.sin(2 * np.pi * (df["month"] - 1) / 12)
-        df["month_cos"] = np.cos(2 * np.pi * (df["month"] - 1) / 12)
+        # Kolejność cech
+
+        expected_features = [
+            "week",
+            "year",
+            "spend_style",
+            "spend_percent",
+            "month",
+            "spend_percent_lag1",
+            "spend_percent_lag2",
+            "week_sin",
+            "week_cos",
+            "mean_spend_deviation",
+            "avg_last_3_weeks",
+            "trend_last_3_weeks",
+            "is_start_of_month",
+            "is_end_of_month",
+        ]
+
+        df = df.sort_values(by=["year", "week"])
+
+        # Uczymy cykliczności i normalizujemy dane do od 0 - 1
+
+        df["week_sin"] = np.sin(2 * np.pi * (df["week"] - 1) / 52)
+        df["week_cos"] = np.cos(2 * np.pi * (df["week"] - 1) / 52)
+
+        # Zamiana wszystkich wartości w pliku .csv na float
+
+        for col in expected_features:
+            if col in df.columns:
+                df[col] = (
+                    pd.to_numeric(df[col], errors="coerce").fillna(0).astype(float)
+                )
+
+        # Jeśli DataFrame to plik treningowy to średnią bierzemy po prostu z danych, jeśli nie to średnią bierzemy z danych użytkownika
 
         if "spend_percent" in df.columns:
             percent_mean = df["spend_percent"].mean()
             df["mean_spend_deviation"] = df["spend_percent"] - percent_mean
         else:
             df["mean_spend_deviation"] = self.df["mean_spend_deviation"]
+
+        if df_tune is not None and df_tune is not df_tune.empty:
+            last_rows = (
+                df_tune.sort_values(by=["year", "week"])
+                .tail(3)["spend_percent"]
+                .tolist()
+            )
+
+            while len(last_rows) < 3:
+                last_rows.insert(0, 0.0)
+
+            df["spend_percent_lag1"] = last_rows[-1]
+            df["spend_percent_lag2"] = last_rows[-2]
+            df["avg_last_3_weeks"] = np.mean(last_rows)
+            df["trend_last_3_weeks"] = df_tune["spend_percent"] - df["avg_last_3_weeks"]
+
+            available_features = [
+                col for col in expected_features if col in df_tune.columns
+            ]
+
+            df_tune = df_tune[available_features]
+        else:
+            df["avg_last_3_weeks"] = df["spend_percent"].rolling(3).mean()
+            df["trend_last_3_weeks"] = df["spend_percent"] - df["avg_last_3_weeks"]
+
+        df["is_start_of_month"] = (df["month"] != df["month"].shift(1)).astype(int)
+        df["is_end_of_month"] = (df["month"] != df["month"].shift(-1)).astype(int)
+
+        available_features = [col for col in expected_features if col in df.columns]
+        df = df[available_features]
 
         return df
 
@@ -90,7 +152,7 @@ class FutureSpend:
 
         return model
 
-    def Predict(self, income, data, df_tune):
+    def Predict(self, data, df_tune, pred_month=True):
         df = pd.DataFrame([data])
         model = None
 
@@ -103,16 +165,36 @@ class FutureSpend:
 
         # Fine-tuning modelu i personalizacja modelu dla użytkownika
 
-        df_tune = self.__addfeatures(df_tune)
-        df_tune = df_tune.sort_values(by=["year", "month"])
+        df_tune_new = self.addfeatures(df_tune)
+        df_tune_new = df_tune_new.sort_values(by=["year", "week"])
 
-        X_train, X_test, y_train, y_test = self.__getsplit(df_tune)
+        X_train, X_test, y_train, y_test = self.__getsplit(df_tune_new)
 
-        model.fit(X_train, y_train, xgb_model=model.get_booster())
+        # model.fit(X_train, y_train, xgb_model=model.get_booster())
 
-        df = self.__addfeatures(df)
+        df = self.addfeatures(df, df_tune)
+
         y_pred = model.predict(df)
 
         # Zwracamy przewidywany wydatek zaokrąglając do części setnych
 
-        return round(income * y_pred[0] / 100, 2)
+        if not pred_month:
+            return round(y_pred[0], 2)
+        else:
+            check = df_tune.query(
+                f"month == {data['month']} and week == {data['week']}"
+            )
+            summed = 0
+            i = 1
+
+            while not check.empty:
+                new_data = data.copy()
+                new_data["week"] = int(check["week"])
+                summed += self.Predict(new_data, df_tune, False)
+
+                check = df_tune.query(
+                    f"month == {data['month']} and week == {data['week']+i}"
+                )
+                i += 1
+
+            return round(summed, 2)

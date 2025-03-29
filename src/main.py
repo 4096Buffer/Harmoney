@@ -35,16 +35,12 @@ predicted_style = ustyle.Predict([[0.1, 0.7, 0.3, 2, 45, 7, 0.3]])
 
 # Model przewiduje przyszłe wydatki na podstawie danych wejściowych
 
-predicted = future_spend.Predict(
-    6500,
-    {
-        "month": 12,
-        "year": 2026,
-        "spend_style": 2,
-        "spend_percent_lag1": 65.4,
-        "spend_percent_lag2": 98.7,
-    },
-    user_data,
+predicted = (
+    future_spend.Predict(
+        {"week": 1, "year": 2026, "spend_style": predicted_style, "month": 1},
+        user_data,
+    )
+    * 5200
 )
 
 # Zamiana surowych danych (0,1,2) na tekst
@@ -85,6 +81,6 @@ print(
 )
 print(f"📊 Styl finansowy {predicted_style_txt}")
 print(
-    f"💲 Szacunkowe wydatki na 1 stycznia 2026: {predicted} PLN czyli {predicted//(6500/100)}% przychodów"
+    f"💲 Szacunkowe wydatki na kwiecień 2025: {predicted} PLN czyli {round((predicted/5200) * 100, 2)}% przychodów"
 )
 print(f"💭 Dzisiaj powinieneś wydać nie więcej niż {Ad} PLN")

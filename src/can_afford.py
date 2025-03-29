@@ -22,7 +22,6 @@ class CanAfford:
     def __init__(self):
 
         # Wczytujemy dane treningowe
-
         self.df = pd.read_csv(global_sets["can_afford_data_path"])
 
         # Usuwamy spacje, taby i inne niepozadane znaki z elementow macierzy
@@ -72,15 +71,16 @@ class CanAfford:
 
         model = None
         expense_type = ExpenseType()
-        user_month_data = pd.read_csv("../data/user-data.csv")
+        user_week_data = pd.read_csv("../data/user-data.csv")
 
         # Sprawdzamy dane wydatków z poprzednich miesięcy
 
-        prev_month = user_month_data.query(
+        prev_weeks = user_week_data.query(
             f"month == {datetime.now().month - 1} and year == {datetime.now().year}"
         )
-        prev_month_sp = prev_month["spend_percent"]
-        prev_month_sp_lag = prev_month["spend_percent_lag1"]
+
+        prev_month_sp = prev_weeks["spend_percent"].sum()
+        prev_month_sp_lag = prev_weeks["spend_percent_lag1"].sum()
 
         # Liczymy zmianę procentową z 3 ostatnich miesięcy
 
@@ -101,15 +101,17 @@ class CanAfford:
         category = expense_type.GetType(name, location)["category_num"]
 
         df = pd.DataFrame(
-            {
-                "next_month_diff": next_month_change,
-                "spend_style": spend_style,
-                "category": category,
-                "installments": installments,
-                "left_percent_from_income": left_percent,
-                "item_price_percent": item_price_percent,
-                "prev_month": prev_month_sp,
-            }
+            [
+                {
+                    "next_month_diff": next_month_change,
+                    "spend_style": spend_style,
+                    "category": category,
+                    "installments": installments,
+                    "left_percent_from_income": left_percent,
+                    "item_price_percent": item_price_percent,
+                    "prev_month": prev_month_sp,
+                }
+            ]
         )
 
         # Sprawdzamy czy plik modelu istnieje. Jeśli nie zaczynamy trening, jeśli tak wczytujemy go z pliku
