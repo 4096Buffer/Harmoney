@@ -17,21 +17,21 @@ can_afford = CanAfford()
 
 Ad = today_spend.GetTodaySpend(
     {
-        "month": 12,
-        "month_day": 20,
-        "year": 2026,
-        "weekday": 6,
-        "weekend": 1,
+        "month": 3,
+        "month_day": 13,
+        "year": 2025,
+        "weekday": 4,
+        "weekend": 0,
         "spend_style": 2,
         "spend_percent_lag1": 1.4,
         "spend_percent_lag2": 1.9,
     },
-    6500,
+    9200,
 )
 
 # Podajemy testowane dane o użytkowniku, aby sprawdzić jak radzi sobie model w przewidywaniu stylu wydawania
 
-predicted_style = ustyle.Predict([[0.1, 0.7, 0.3, 2, 45, 7, 0.3]])
+predicted_style = ustyle.Predict([[0.04, 0.82, 0.18, 0, 36, 5, 0.44]])
 
 # Model przewiduje przyszłe wydatki na podstawie danych wejściowych
 
@@ -81,6 +81,6 @@ print(
 )
 print(f"📊 Styl finansowy {predicted_style_txt}")
 print(
-    f"💲 Szacunkowe wydatki na kwiecień 2025: {predicted} PLN czyli {round((predicted/5200) * 100, 2)}% przychodów"
+    f"💲 Szacunkowe wydatki na kwiecień 2025: {predicted} PLN czyli {round((predicted/9200) * 100, 2)}% przychodów"
 )
 print(f"💭 Dzisiaj powinieneś wydać nie więcej niż {Ad} PLN")

@@ -66,25 +66,15 @@ class FutureSpend:
             df["mean_spend_deviation"] = self.df["mean_spend_deviation"]
 
         if df_tune is not None and df_tune is not df_tune.empty:
-            last_rows = (
-                df_tune.sort_values(by=["year", "week"])
-                .tail(3)["spend_percent"]
-                .tolist()
+            df_tune = df_tune.sort_values(by=["year", "week"]).reset_index(drop=True)
+
+            df["spend_percent_lag1"] = df_tune.iloc[-1]["spend_percent"]
+            df["spend_percent_lag2"] = df_tune.iloc[-2]["spend_percent"]
+
+            df["avg_last_3_weeks"] = df_tune["spend_percent"].tail(3).mean()
+            df["trend_last_3_weeks"] = (
+                df_tune["spend_percent"].iloc[-1] - df["avg_last_3_weeks"]
             )
-
-            while len(last_rows) < 3:
-                last_rows.insert(0, 0.0)
-
-            df["spend_percent_lag1"] = last_rows[-1]
-            df["spend_percent_lag2"] = last_rows[-2]
-            df["avg_last_3_weeks"] = np.mean(last_rows)
-            df["trend_last_3_weeks"] = df_tune["spend_percent"] - df["avg_last_3_weeks"]
-
-            available_features = [
-                col for col in expected_features if col in df_tune.columns
-            ]
-
-            df_tune = df_tune[available_features]
         else:
             df["avg_last_3_weeks"] = df["spend_percent"].rolling(3).mean()
             df["trend_last_3_weeks"] = df["spend_percent"] - df["avg_last_3_weeks"]
@@ -179,22 +169,27 @@ class FutureSpend:
         # Zwracamy przewidywany wydatek zaokrąglając do części setnych
 
         if not pred_month:
-            return round(y_pred[0], 2)
+            return [round(y_pred[0], 2), df]
         else:
-            check = df_tune.query(
-                f"month == {data['month']} and week == {data['week']}"
-            )
             summed = 0
-            i = 1
-
-            while not check.empty:
-                new_data = data.copy()
-                new_data["week"] = int(check["week"])
-                summed += self.Predict(new_data, df_tune, False)
-
+            i = 0
+            while True:
                 check = df_tune.query(
-                    f"month == {data['month']} and week == {data['week']+i}"
+                    f"month == {data['month']} and week == {data['week']+i} and year == {data['year'] - 1}"
                 )
+
+                if check.empty:
+                    break
+
+                new_data = data.copy()
+                new_data["week"] = data["week"] + i
+
+                pred = self.Predict(new_data, df_tune, False)
+                num = pred[0]
+                df_copy = pred[1]
+
+                df_tune = pd.concat([df_tune, df_copy], ignore_index=True)
+                summed += num
                 i += 1
 
             return round(summed, 2)
