@@ -7,6 +7,7 @@ from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.model_selection import TimeSeriesSplit
 import joblib
 import os.path
+import matplotlib.pyplot as plt
 
 global_sets = __SETTINGS__
 
@@ -35,19 +36,21 @@ class FutureSpend:
             "spend_percent_lag2",
             "week_sin",
             "week_cos",
-            "mean_spend_deviation",
-            "avg_last_3_weeks",
+            # "mean_spend_deviation",
+            "avg_last_5_weeks",
             "trend_last_3_weeks",
             "is_start_of_month",
             "is_end_of_month",
+            "season",
+            "season_code",
         ]
 
         df = df.sort_values(by=["year", "week"])
 
         # Uczymy cykliczności i normalizujemy dane do od 0 - 1
 
-        df["week_sin"] = np.sin(2 * np.pi * (df["week"] - 1) / 52)
-        df["week_cos"] = np.cos(2 * np.pi * (df["week"] - 1) / 52)
+        df["week_sin"] = np.sin(2 * np.pi * (df["week"] - 1) / 52) ** 2.5
+        df["week_cos"] = np.cos(2 * np.pi * (df["week"] - 1) / 52) ** 2.5
 
         # Zamiana wszystkich wartości w pliku .csv na float
 
@@ -59,25 +62,24 @@ class FutureSpend:
 
         # Jeśli DataFrame to plik treningowy to średnią bierzemy po prostu z danych, jeśli nie to średnią bierzemy z danych użytkownika
 
-        if "spend_percent" in df.columns:
-            percent_mean = df["spend_percent"].mean()
-            df["mean_spend_deviation"] = df["spend_percent"] - percent_mean
-        else:
-            df["mean_spend_deviation"] = self.df["mean_spend_deviation"]
-
         if df_tune is not None and df_tune is not df_tune.empty:
             df_tune = df_tune.sort_values(by=["year", "week"]).reset_index(drop=True)
 
-            df["spend_percent_lag1"] = df_tune.iloc[-1]["spend_percent"]
-            df["spend_percent_lag2"] = df_tune.iloc[-2]["spend_percent"]
+            if len(df_tune) >= 2:
+                df["spend_percent_lag1"] = df_tune.iloc[-1]["spend_percent"]
+                df["spend_percent_lag2"] = df_tune.iloc[-2]["spend_percent"]
+            else:
+                df["spend_percent_lag1"] = df["spend_percent_lag2"] = df[
+                    "spend_percent"
+                ].mean()
 
-            df["avg_last_3_weeks"] = df_tune["spend_percent"].tail(3).mean()
+            df["avg_last_5_weeks"] = df_tune["spend_percent"].tail(5).mean()
             df["trend_last_3_weeks"] = (
-                df_tune["spend_percent"].iloc[-1] - df["avg_last_3_weeks"]
+                df_tune["spend_percent"].iloc[-1] - df["avg_last_5_weeks"]
             )
         else:
-            df["avg_last_3_weeks"] = df["spend_percent"].rolling(3).mean()
-            df["trend_last_3_weeks"] = df["spend_percent"] - df["avg_last_3_weeks"]
+            df["avg_last_5_weeks"] = df["spend_percent"].rolling(3).mean()
+            df["trend_last_3_weeks"] = df["spend_percent"] - df["avg_last_5_weeks"]
 
         df["is_start_of_month"] = (df["month"] != df["month"].shift(1)).astype(int)
         df["is_end_of_month"] = (df["month"] != df["month"].shift(-1)).astype(int)
@@ -121,6 +123,9 @@ class FutureSpend:
 
         model.fit(X_train, y_train)
 
+        for feature, score in zip(X_train.columns, model.feature_importances_):
+            print(f"{feature}: {score:.4f}")
+
         # Test modelu na X_test i porównanie go z prawidłowymi przewidywaniami y_test
 
         y_pred = model.predict(X_test)
@@ -155,12 +160,20 @@ class FutureSpend:
 
         # Fine-tuning modelu i personalizacja modelu dla użytkownika
 
-        df_tune_new = self.addfeatures(df_tune)
-        df_tune_new = df_tune_new.sort_values(by=["year", "week"])
+        # Jeśli użytkownik nie ma danych w tym konkretnym tygodniu z takim spend_style w przeszłości model
+        # nie jest w stanie poprawnie przewidzieć danych, dlatego używamy danych globalnych
 
-        X_train, X_test, y_train, y_test = self.__getsplit(df_tune_new)
+        has_style = df_tune.query(
+            f'month == {data["month"]} and week == {data["week"]} and spend_style == {data["spend_style"]}'
+        )
 
-        model.fit(X_train, y_train, xgb_model=model.get_booster())
+        if not has_style.empty:
+            df_tune_new = self.addfeatures(df_tune)
+            df_tune_new = df_tune_new.sort_values(by=["year", "week"])
+
+            X_train, X_test, y_train, y_test = self.__getsplit(df_tune_new)
+
+            model.fit(X_train, y_train, xgb_model=model.get_booster())
 
         df = self.addfeatures(df, df_tune)
 

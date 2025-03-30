@@ -31,17 +31,18 @@ Ad = today_spend.GetTodaySpend(
 
 # Podajemy testowane dane o użytkowniku, aby sprawdzić jak radzi sobie model w przewidywaniu stylu wydawania
 
-predicted_style = ustyle.Predict([[0.04, 0.82, 0.18, 0, 36, 5, 0.44]])
+predicted_style = ustyle.Predict([[0.18, 0.65, 0.15, 3, 78, 5, 0.41]])
 
 # Model przewiduje przyszłe wydatki na podstawie danych wejściowych
 
 predicted = (
     future_spend.Predict(
-        {"week": 1, "year": 2026, "spend_style": predicted_style, "month": 1},
+        {"week": 1, "year": 2026, "spend_style": 1, "month": 1},
         user_data,
     )
-    * 5200
+    * 9200
 )
+
 
 # Zamiana surowych danych (0,1,2) na tekst
 

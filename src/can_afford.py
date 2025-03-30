@@ -98,7 +98,10 @@ class CanAfford:
         installments = data["installments"]
         income = data["income"]
         item_price_percent = price / income
-        category = expense_type.GetType(name, location)["category_num"]
+        try:
+            category = expense_type.GetType(name, location)["category_num"]
+        except:
+            category = 8
 
         df = pd.DataFrame(
             [
