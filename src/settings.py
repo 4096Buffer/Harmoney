@@ -8,4 +8,5 @@ __SETTINGS__ = {
     "api_key_path": "../data/api-key.csv",
     "can_afford_model_path": "../models/can_afford.cbm",
     "can_afford_data_path": "../data/can-afford.csv",
+    "cache_categories": "../cache/categories.csv",
 }

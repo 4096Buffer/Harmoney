@@ -12,3 +12,4 @@ test/
 
 *.plk
 *.cbm
+cache/
