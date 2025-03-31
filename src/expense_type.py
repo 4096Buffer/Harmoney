@@ -64,6 +64,9 @@ class ExpenseType:
 
             try:
                 gpt_response = int(gpt_response)
+
+                if gpt_response > 8 and gpt_response < 0:
+                    gpt_response = 8
             except:
                 gpt_response = 8
 
