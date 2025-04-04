@@ -18,7 +18,7 @@ import math
 import whois
 from datetime import datetime
 import os.path
-from settings import __SETTINGS__
+from core.settings import __SETTINGS__
 
 global_sets = __SETTINGS__
 
