@@ -9,7 +9,6 @@ from can_afford import CanAfford
 
 ustyle = UStyle()
 future_spend = FutureSpend()
-user_data = pd.read_csv("../data/user-data.csv")
 today_spend = TodaySpend()
 can_afford = CanAfford()
 
@@ -36,11 +35,7 @@ predicted_style = ustyle.Predict([[0.18, 0.65, 0.15, 3, 78, 5, 0.41]])
 # Model przewiduje przyszłe wydatki na podstawie danych wejściowych
 
 predicted = (
-    future_spend.Predict(
-        {"week": 1, "year": 2026, "spend_style": 1, "month": 1},
-        user_data,
-    )
-    * 9200
+    future_spend.Predict({"week": 1, "year": 2026, "spend_style": 1, "month": 1}) * 9200
 )
 
 

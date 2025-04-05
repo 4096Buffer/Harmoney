@@ -1,5 +1,5 @@
 import requests
-from settings import __SETTINGS__
+from core.settings import __SETTINGS__
 import pandas as pd
 
 global_sets = __SETTINGS__

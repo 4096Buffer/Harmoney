@@ -13,3 +13,4 @@ test/
 *.plk
 *.cbm
 cache/
+settings.py

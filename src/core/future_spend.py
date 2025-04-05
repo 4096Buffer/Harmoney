@@ -1,5 +1,5 @@
 import pandas as pd
-from settings import __SETTINGS__
+from core.settings import __SETTINGS__
 import numpy as np
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
@@ -8,6 +8,7 @@ from sklearn.model_selection import TimeSeriesSplit
 import joblib
 import os.path
 import matplotlib.pyplot as plt
+import os
 
 global_sets = __SETTINGS__
 
@@ -147,9 +148,15 @@ class FutureSpend:
 
         return model
 
-    def Predict(self, data, df_tune, pred_month=True):
+    def Predict(self, data, df_tune=None, pred_month=True):
         df = pd.DataFrame([data])
         model = None
+
+        if self.df.columns.any() != df.columns.any():
+            raise Exception("The columns don't match.")
+
+        if df_tune is None or df_tune.empty:
+            df_tune = pd.read_csv("../data/user-data.csv")
 
         # Sprawdzamy czy model został zapisany do pliku, jeśli nie zaczynamy trening
 

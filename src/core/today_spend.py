@@ -1,6 +1,6 @@
 from datetime import datetime
 import calendar
-from settings import __SETTINGS__
+from core.settings import __SETTINGS__
 import pandas as pd
 import catboost as cb
 from catboost import CatBoostClassifier
