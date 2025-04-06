@@ -21,6 +21,6 @@ def get_future_spend(data: InputData):
     try:
         pred = future_spend.Predict(data.data)
     except:
-        return {"message": "Error passed data is not correct."}
+        return {"message": "Error passed data is not correct.", "code": 0}
 
-    return {"message": pred}
+    return {"message": pred, "code": 1}

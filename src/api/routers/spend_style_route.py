@@ -20,6 +20,6 @@ def get_style(data: InputData):
     try:
         pred = ustyle.Predict([data.data])
     except:
-        return {"message": "Wrong data has been passed."}
+        return {"message": "Wrong data has been passed.", "code": 0}
 
-    return {"message": f"{pred}"}
+    return {"message": f"{pred}", "code": 1}

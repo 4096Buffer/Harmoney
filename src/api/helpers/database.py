@@ -13,3 +13,11 @@ class DataBase:
         with self.engine.connect() as conn:
             res = pd.read_sql(text(query), conn, params=params)
             return res
+
+    def Update(self, data, uid, table):
+        with self.engine.begin() as conn:
+            for key, val in data.items():
+                conn.execute(
+                    text(f"UPDATE {table} SET {key} = :val WHERE id = :id"),
+                    {"val": val, "id": int(uid)},
+                )
