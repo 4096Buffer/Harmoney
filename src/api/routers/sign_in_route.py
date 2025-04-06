@@ -82,7 +82,7 @@ def sign_in(data: InputData, response: Response, request: Request):
     )
 
     try:
-        database.Update({"is_active": True}, row["id"], "users")
+        database.Update({"is_active": True, "last_login" : 'now()'}, row["id"], "users")
     except:
         return {"message" : "Unknown error occured.", "code" : 0}
 

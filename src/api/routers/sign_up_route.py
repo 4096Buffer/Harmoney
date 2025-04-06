@@ -1,4 +1,4 @@
-# src/api/routers/sign_in_route.py
+# src/api/routers/sign_up_route.py
 
 import api.helpers.database as db
 from fastapi import APIRouter, Response, Request, Cookie, HTTPException
@@ -16,9 +16,9 @@ router = APIRouter()
 
 
 class InputData(BaseModel):
-    name : str,
-    password : str,
-    email : str,
+    name : str
+    password : str
+    email : str
     surname : str
 
 def check_password_strengh(password : str):
@@ -81,4 +81,35 @@ def sign_up(data: InputData):
     if not result:
         return {"message" : reason, "code" : 0}
 
-    
+    try:
+        rows = database.Get("SELECT * FROM users WHERE email = :email", {"email": email})
+    except:
+        return {"message" : "Unknown error occured.", "code" : 0}
+
+    if not rows.empty:
+        return {"message" : "If this email is not yet registered, your account will be created shortly.", "code" : 1}
+
+    ph = PasswordHasher()
+    password_hash = ph.hash(password)
+
+    try:
+        # Później dodać tutaj potwierdzenie najpierw emailem.
+
+        database.Insert(
+            {
+                'name' : name,
+                'surname' : surname,
+                'password' : password_hash,
+                'email' : email,
+                'plan' : 0,
+                'settings' : '{ "language" : "PL", "mode" : "dark" }',
+                'is_active' : False,
+                'email_verified' : False,
+            },
+            'users'
+        )
+        
+    except Exception as e:
+        return {"message" : "Unknown error occured", "code" : 0}
+
+    return {"message" : "If this email is not yet registered, your account will be created shortly.", "code" : 1}

@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.routers.spend_style_route import router as spend_style_router
 from api.routers.future_spend_route import router as future_spend_router
 from api.routers.sign_in_route import router as sign_in_router
+from api.routers.sign_up_route import router as sign_up_router
 from api.settings import create_engine
 import api.helpers.database as db
 
@@ -24,7 +25,7 @@ app.add_middleware(
 app.include_router(spend_style_router, prefix="/spend-style", tags=["SpendStyle"])
 app.include_router(future_spend_router, prefix="/future-spend", tags=["FutureSpend"])
 app.include_router(sign_in_router, prefix="/sign-in", tags=["SignIn"])
-
+app.include_router(sign_up_router, prefix="/sign-up", tags=["SignUp"])
 
 @app.get("/")
 def root():
