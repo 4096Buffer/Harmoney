@@ -10,7 +10,6 @@ from jose import jwt
 from datetime import datetime, timedelta
 import api.settings
 
-
 database = db.DataBase()
 router = APIRouter()
 
@@ -58,8 +57,8 @@ def sign_in(data: InputData, response: Response, request: Request):
 
     data = {"uid": str(row["id"]), "sub": row["email"]}
 
-    access_token = create_token(data, expires_minutes=15)
-    refresh_token = create_token(data, expires_days=7)
+    access_token = create_token(data, expires_minutes=api.settings.ACCESS_TOKEN_EXPIRES)
+    refresh_token = create_token(data, expires_days=api.settings.REFRESH_TOKEN_EXPIRES)
 
     response = JSONResponse(content={"message": "Success", "code": 1})
 
