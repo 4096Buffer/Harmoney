@@ -21,13 +21,12 @@ class DataBase:
                     text(f"UPDATE {table} SET {key} = :val WHERE id = :id"),
                     {"val": val, "id": int(uid)},
                 )
-                
+
     def Insert(self, data: dict, table: str):
         with self.engine.begin() as conn:
-            values = ','.join(data)
-            placesholders = ':' + ',:'.join(data)
+            values = ",".join(data)
+            placesholders = ":" + ",:".join(data)
 
             conn.execute(
-                text(f"INSERT INTO {table} ({values}) VALUES ({placesholders})"),
-                data
+                text(f"INSERT INTO {table} ({values}) VALUES ({placesholders})"), data
             )

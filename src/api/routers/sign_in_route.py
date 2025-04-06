@@ -38,9 +38,11 @@ def sign_in(data: InputData, response: Response, request: Request):
     password = data.password
 
     try:
-        rows = database.Get("SELECT * FROM users WHERE email = :email", {"email": email})
+        rows = database.Get(
+            "SELECT * FROM users WHERE email = :email", {"email": email}
+        )
     except:
-        return {"message" : "Unknown error occured.", "code" : 0}
+        return {"message": "Unknown error occured.", "code": 0}
     if rows.empty:
         return {"message": "The email or password is not correct", "code": 0}
 
@@ -82,8 +84,8 @@ def sign_in(data: InputData, response: Response, request: Request):
     )
 
     try:
-        database.Update({"is_active": True, "last_login" : 'now()'}, row["id"], "users")
+        database.Update({"is_active": True, "last_login": "now()"}, row["id"], "users")
     except:
-        return {"message" : "Unknown error occured.", "code" : 0}
+        return {"message": "Unknown error occured.", "code": 0}
 
     return response

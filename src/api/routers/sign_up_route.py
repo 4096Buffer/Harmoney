@@ -16,24 +16,25 @@ router = APIRouter()
 
 
 class InputData(BaseModel):
-    name : str
-    password : str
-    email : str
-    surname : str
+    name: str
+    password: str
+    email: str
+    surname: str
 
-def check_password_strengh(password : str):
+
+def check_password_strengh(password: str):
     if len(password) < 8:
-        return False, 'The password must be at least 8 characters long.'
+        return False, "The password must be at least 8 characters long."
 
     lower_letter = False
     upper_letter = False
     number = False
-    schar  = False
+    schar = False
 
     for c in password:
         if not lower_letter and c.isalpha():
-            lower_letter = c == c.lower() 
-        
+            lower_letter = c == c.lower()
+
         if not upper_letter and c.isalpha():
             upper_letter = c == c.upper()
 
@@ -43,21 +44,25 @@ def check_password_strengh(password : str):
                 number = True
             except:
                 pass
-        
+
         if not schar:
             schar = not c.isalpha() and not c.isdigit()
 
     if not lower_letter or not upper_letter:
-        return False, 'Password must contain at least one lower letter and one upper letter!'
-    
-    if not number:
-        return False, 'Password must contain at least one number!'
-    
-    if not schar:
-        return False, 'Password must contain at least one special character!'
+        return (
+            False,
+            "Password must contain at least one lower letter and one upper letter!",
+        )
 
-    return True, ''
-    
+    if not number:
+        return False, "Password must contain at least one number!"
+
+    if not schar:
+        return False, "Password must contain at least one special character!"
+
+    return True, ""
+
+
 @router.post("/")
 def sign_up(data: InputData):
     name = data.name
@@ -66,28 +71,39 @@ def sign_up(data: InputData):
     surname = data.surname
 
     if len(name) < 2 and len(name) > 30:
-        return {"message" : "The name exceeded maximum character count. Max - 30", "code" : 0}
-    
+        return {
+            "message": "The name exceeded maximum character count. Max - 30",
+            "code": 0,
+        }
+
     if len(surname) < 2 and len(surname) > 35:
-        return {"message" : "The surname exceeded maximum character count. Max - 35", "code" : 0}
-    
-    regex = '^[^\s@]+@[^\s@]+\.[^\s@]+$'
+        return {
+            "message": "The surname exceeded maximum character count. Max - 35",
+            "code": 0,
+        }
+
+    regex = "^[^\s@]+@[^\s@]+\.[^\s@]+$"
 
     if not re.match(regex, email):
-        return {"message" : "The email is not correct.", "code" : 0}
+        return {"message": "The email is not correct.", "code": 0}
 
     result, reason = check_password_strengh(password)
 
     if not result:
-        return {"message" : reason, "code" : 0}
+        return {"message": reason, "code": 0}
 
     try:
-        rows = database.Get("SELECT * FROM users WHERE email = :email", {"email": email})
+        rows = database.Get(
+            "SELECT * FROM users WHERE email = :email", {"email": email}
+        )
     except:
-        return {"message" : "Unknown error occured.", "code" : 0}
+        return {"message": "Unknown error occured.", "code": 0}
 
     if not rows.empty:
-        return {"message" : "If this email is not yet registered, your account will be created shortly.", "code" : 1}
+        return {
+            "message": "If this email is not yet registered, your account will be created shortly.",
+            "code": 1,
+        }
 
     ph = PasswordHasher()
     password_hash = ph.hash(password)
@@ -97,19 +113,22 @@ def sign_up(data: InputData):
 
         database.Insert(
             {
-                'name' : name,
-                'surname' : surname,
-                'password' : password_hash,
-                'email' : email,
-                'plan' : 0,
-                'settings' : '{ "language" : "PL", "mode" : "dark" }',
-                'is_active' : False,
-                'email_verified' : False,
+                "name": name,
+                "surname": surname,
+                "password": password_hash,
+                "email": email,
+                "plan": 0,
+                "settings": '{ "language" : "PL", "mode" : "dark" }',
+                "is_active": False,
+                "email_verified": False,
             },
-            'users'
+            "users",
         )
-        
-    except Exception as e:
-        return {"message" : "Unknown error occured", "code" : 0}
 
-    return {"message" : "If this email is not yet registered, your account will be created shortly.", "code" : 1}
+    except Exception as e:
+        return {"message": "Unknown error occured", "code": 0}
+
+    return {
+        "message": "If this email is not yet registered, your account will be created shortly.",
+        "code": 1,
+    }

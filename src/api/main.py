@@ -27,6 +27,7 @@ app.include_router(future_spend_router, prefix="/future-spend", tags=["FutureSpe
 app.include_router(sign_in_router, prefix="/sign-in", tags=["SignIn"])
 app.include_router(sign_up_router, prefix="/sign-up", tags=["SignUp"])
 
+
 @app.get("/")
 def root():
     return {"message": "Error: Empty request"}
