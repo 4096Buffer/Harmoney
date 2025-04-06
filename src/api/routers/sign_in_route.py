@@ -37,8 +37,10 @@ def sign_in(data: InputData, response: Response, request: Request):
     email = data.email
     password = data.password
 
-    rows = database.Get("SELECT * FROM users WHERE email = :email", {"email": email})
-
+    try:
+        rows = database.Get("SELECT * FROM users WHERE email = :email", {"email": email})
+    except:
+        return {"message" : "Unknown error occured.", "code" : 0}
     if rows.empty:
         return {"message": "The email or password is not correct", "code": 0}
 
@@ -79,6 +81,9 @@ def sign_in(data: InputData, response: Response, request: Request):
         domain=domain,
     )
 
-    database.Update({"is_active": True}, row["id"], "users")
+    try:
+        database.Update({"is_active": True}, row["id"], "users")
+    except:
+        return {"message" : "Unknown error occured.", "code" : 0}
 
     return response
