@@ -27,8 +27,8 @@ def verify_token(token: str) -> int:
         return 1, int(payload['uid'])
     except ExpiredSignatureError:
         return 2, "The token is expired"
-    except:
-        return 3, "The token is not valid"
+    except JWTError:
+        return 2, "The token is not valid"
 
 @router.post("/")
 def get_profile(request : Request, access_token: str = Cookie(None), refresh_token : str = Cookie(None)):
@@ -36,14 +36,11 @@ def get_profile(request : Request, access_token: str = Cookie(None), refresh_tok
     domain = host.split(":")[0]
 
     if not access_token:
-        return {"message" : "You are not logged in", "code" : 0}
+        access_token = ''
 
     code, result = verify_token(access_token)
     uid = None
     new_access_token = None
-
-    if code == 3:
-        return {"message" : result, "code" : 0}
     
     if code == 2:
         if not refresh_token:

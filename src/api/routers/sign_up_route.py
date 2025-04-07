@@ -129,7 +129,7 @@ def sign_up(data: InputData):
     except Exception as e:
         return {"message": "Unknown error occured", "code": 0}
 
-    emailer.send_email(email, "Welcome to Harmoney! Verify your email.", "Click here to verify your email->")
+    emailer.send_email(email, "Welcome to Harmoney!", "Explore our new blahblabla")
 
     return {
         "message": "If this email is not yet registered, your account will be created shortly.",
