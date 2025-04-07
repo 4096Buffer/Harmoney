@@ -31,6 +31,7 @@ app.include_router(sign_up_router, prefix="/sign-up", tags=["SignUp"])
 app.include_router(get_profile_router, prefix="/profile", tags=["Profile"])
 app.include_router(email_verify_router, prefix="/email-verify", tags=["EmailVerify"])
 
+
 @app.get("/")
 def root():
     return {"message": "Error: Empty request"}

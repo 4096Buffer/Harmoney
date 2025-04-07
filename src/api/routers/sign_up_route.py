@@ -23,6 +23,7 @@ class InputData(BaseModel):
     email: str
     surname: str
 
+
 def check_password_strengh(password: str):
     if len(password) < 8:
         return False, "The password must be at least 8 characters long."
