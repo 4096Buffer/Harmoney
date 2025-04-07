@@ -10,9 +10,11 @@ from jose import jwt
 from datetime import datetime, timedelta
 import api.settings
 import re
+from api.helpers.emailer import Emailer
 
 database = db.DataBase()
 router = APIRouter()
+emailer = Emailer()
 
 
 class InputData(BaseModel):
@@ -20,7 +22,6 @@ class InputData(BaseModel):
     password: str
     email: str
     surname: str
-
 
 def check_password_strengh(password: str):
     if len(password) < 8:
@@ -127,6 +128,8 @@ def sign_up(data: InputData):
 
     except Exception as e:
         return {"message": "Unknown error occured", "code": 0}
+
+    emailer.send_email(email, "Welcome to Harmoney! Verify your email.", "Click here to verify your email->")
 
     return {
         "message": "If this email is not yet registered, your account will be created shortly.",
