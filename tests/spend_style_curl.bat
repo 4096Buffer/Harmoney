@@ -1,0 +1,1 @@
+curl -X POST http://127.0.0.1:8000/spend-style/ -H "Content-Type: application/json" -d "{\"data\": [0.18, 0.65, 0.15, 3, 78, 5, 0.41]}"

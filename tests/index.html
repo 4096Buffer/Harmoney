@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JWT Auth Test</title>
+</head>
+<body>
+  <h1>JWT Auth Test</h1>
+  <button onclick="signIn()">🔐 Zaloguj się</button>
+  <button onclick="getProfile()">📄 Pobierz profil</button>
+  <button onclick="sendVerification()">📧 Potwierdź e-mail</button>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+
+    function signIn() {
+      fetch(`${API_BASE}/sign-in/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email: "klawy@gmail.com",
+          password: "1234"
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("✅ Zalogowano:", data);
+        alert("Zalogowano! Sprawdź konsolę.");
+      })
+      .catch(err => {
+        console.error("❌ Błąd logowania:", err);
+      });
+    }
+
+    function getProfile() {
+      fetch(`${API_BASE}/profile/`, {
+        method: "POST",
+        credentials: "include"
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("📄 Profil użytkownika:", data);
+        alert("Profil załadowany! Sprawdź konsolę.");
+      })
+      .catch(err => {
+        console.error("❌ Błąd pobierania profilu:", err);
+      });
+    }
+
+    function sendVerification() {
+      fetch(`${API_BASE}/email-verify/?mode=0`, {
+        method: "GET",
+        credentials: "include"
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("📧 Weryfikacja e-maila:", data);
+        alert(data.message);
+      })
+      .catch(err => {
+        console.error("❌ Błąd przy wysyłce e-maila:", err);
+      });
+    }
+  </script>
+</body>
+</html>

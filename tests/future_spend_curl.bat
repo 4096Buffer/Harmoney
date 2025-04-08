@@ -1,0 +1,1 @@
+curl -X POST http://127.0.0.1:8000/future-spend/ -H "Content-Type: application/json" -d "{\"data\": {\"week\": 1, \"year\": 2026, \"spend_style\": 1, \"month\": 1}}"

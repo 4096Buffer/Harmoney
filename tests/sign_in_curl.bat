@@ -1,0 +1,1 @@
+curl -X POST http://127.0.0.1:8000/sign-in/ -H "Content-Type: application/json" -d "{\"email\": \"klawy@gmail.com\", \"password\": \"1234\"}"

@@ -7,8 +7,6 @@ __pycache__/
 
 catboost_info/
 *.csv
-# Ignorowanie folderu test
-test/
 
 *.plk
 *.cbm
