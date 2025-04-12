@@ -1,18 +1,24 @@
-from ustyle import UStyle
-from future_spend import FutureSpend
+from core.ustyle import UStyle
+from core.future_spend import FutureSpend
 import pandas as pd
-from today_spend import TodaySpend
-from expense_type import ExpenseType
-from can_afford import CanAfford
-from assitant import Assistant
+from core.today_spend import TodaySpend
+from core.expense_type import ExpenseType
+from core.can_afford import CanAfford
+from core.assistant import Assistant
+
+
+user_data = pd.read_csv("../data/user-data.csv")
 
 # Tworzymy obiekty modeli
+
 
 ustyle = UStyle()
 future_spend = FutureSpend()
 today_spend = TodaySpend()
 can_afford = CanAfford()
+assistant = Assistant(user_data)
 
+print(assistant.Ask("A dane o mnie?"))
 # Model przewiduje dzienny wydatek i przelicza to na odpowiedni budżet
 
 Ad = today_spend.GetTodaySpend(

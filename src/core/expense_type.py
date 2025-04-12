@@ -4,7 +4,6 @@ import pandas as pd
 
 global_sets = __SETTINGS__
 
-
 class ExpenseType:
     def __init__(self):
         with open(global_sets["api_key_path"], "r") as file:
