@@ -4,6 +4,7 @@ import pandas as pd
 from today_spend import TodaySpend
 from expense_type import ExpenseType
 from can_afford import CanAfford
+from assitant import Assistant
 
 # Tworzymy obiekty modeli
 
