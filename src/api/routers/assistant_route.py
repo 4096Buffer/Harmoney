@@ -34,7 +34,7 @@ def get_user_id_from_token(access_token: str = Cookie(None)):
 
 
 @router.post("/")
-def ask(request: Request, data: InputData, uid: int = Depends(get_user_id_from_token)):
+async def ask(request: Request, data: InputData, uid: int = Depends(get_user_id_from_token)):
     prompt = data.prompt
 
     if uid < 0:
