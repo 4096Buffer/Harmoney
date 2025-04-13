@@ -31,7 +31,7 @@ def verify_token(token: str) -> int:
         return 1, int(payload["uid"])
     except ExpiredSignatureError:
         return 2, "The token is expired"
-    except JWTError:
+    except Exception as e:
         return 2, "The token is not valid"
 
 

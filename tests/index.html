@@ -6,9 +6,19 @@
 </head>
 <body>
   <h1>JWT Auth Test</h1>
+
   <button onclick="signIn()">🔐 Zaloguj się</button>
   <button onclick="getProfile()">📄 Pobierz profil</button>
   <button onclick="sendVerification()">📧 Potwierdź e-mail</button>
+
+  <hr>
+
+  <h2>🧠 Zadaj pytanie asystentowi</h2>
+  <form onsubmit="askAssistant(event)">
+    <input type="text" id="prompt" placeholder="Napisz pytanie..." style="width: 300px;">
+    <button type="submit">📨 Wyślij</button>
+  </form>
+  <pre id="assistant-response"></pre>
 
   <script>
     const API_BASE = "http://127.0.0.1:8000";
@@ -16,23 +26,16 @@
     function signIn() {
       fetch(`${API_BASE}/sign-in/`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          email: "klawy@gmail.com",
-          password: "1234"
-        })
+        body: JSON.stringify({ email: "klawy@gmail.com", password: "1234" })
       })
       .then(res => res.json())
       .then(data => {
         console.log("✅ Zalogowano:", data);
         alert("Zalogowano! Sprawdź konsolę.");
       })
-      .catch(err => {
-        console.error("❌ Błąd logowania:", err);
-      });
+      .catch(err => console.error("❌ Błąd logowania:", err));
     }
 
     function getProfile() {
@@ -45,9 +48,7 @@
         console.log("📄 Profil użytkownika:", data);
         alert("Profil załadowany! Sprawdź konsolę.");
       })
-      .catch(err => {
-        console.error("❌ Błąd pobierania profilu:", err);
-      });
+      .catch(err => console.error("❌ Błąd pobierania profilu:", err));
     }
 
     function sendVerification() {
@@ -60,8 +61,27 @@
         console.log("📧 Weryfikacja e-maila:", data);
         alert(data.message);
       })
+      .catch(err => console.error("❌ Błąd przy wysyłce e-maila:", err));
+    }
+
+    function askAssistant(event) {
+      event.preventDefault();
+      const prompt = document.getElementById("prompt").value;
+
+      fetch(`${API_BASE}/ask-assistant`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ prompt: prompt })
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("🤖 Odpowiedź asystenta:", data);
+        document.getElementById("assistant-response").innerText = data.answer || "Brak odpowiedzi.";
+      })
       .catch(err => {
-        console.error("❌ Błąd przy wysyłce e-maila:", err);
+        console.error("❌ Błąd zapytania:", err);
+        document.getElementById("assistant-response").innerText = "Błąd podczas zapytania do asystenta.";
       });
     }
   </script>
