@@ -33,6 +33,7 @@ app.include_router(get_profile_router, prefix="/profile", tags=["Profile"])
 app.include_router(email_verify_router, prefix="/email-verify", tags=["EmailVerify"])
 app.include_router(assistant_router, prefix="/ask-assistant", tags=["AskAssistant"])
 
+
 @app.get("/")
 def root():
     return {"message": "Error: Empty request"}

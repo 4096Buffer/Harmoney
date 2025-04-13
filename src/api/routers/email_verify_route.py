@@ -29,6 +29,7 @@ def get_user_id_from_token(access_token: str = Cookie(None)):
     except Exception as e:
         return -1
 
+
 @router.get("/")
 def verify_email(
     request: Request,
