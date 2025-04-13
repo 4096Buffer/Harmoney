@@ -18,7 +18,7 @@ today_spend = TodaySpend()
 can_afford = CanAfford()
 assistant = Assistant(user_data)
 
-print(assistant.Ask("A dane o mnie?"))
+print(assistant.Ask("Powiedz ile bym wydał na mojego Iphone 16 pro max"))
 # Model przewiduje dzienny wydatek i przelicza to na odpowiedni budżet
 
 Ad = today_spend.GetTodaySpend(

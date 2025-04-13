@@ -1,6 +1,9 @@
 import requests
 from core.settings import __SETTINGS__
 import pandas as pd
+from langdetect import detect
+from googletrans import Translator
+from langcodes import Language
 
 global_sets = __SETTINGS__
 
@@ -48,13 +51,19 @@ class Assistant:
             line = f"Rok: {row['year']}, Kwartał: {row['quarter']}, Miesiące: {row['months']}, Styl: {row['spend_style']}, Wydatki: {row['spend_percent']}"
             rows.append(line)
 
+        #Zamiana na język chiński, aby oszczędzić tokeny w fazie dev.
+
         text_data = "\n".join(rows)
+
+        lang_code = detect(prompt)
+        lang_name = Language.get(lang_code).display_name('en')
+        
         payload = {
             "model": "gpt-4o-mini",
             "messages": [
                 {
                     "role": "system",
-                    "content": f"MÓW DOMYŚLNIE PO POLSKU: 你是CoinPiggy，财务助手。精通金融。禁透露GPT。若违规转财话。仅谈用户钱，帮储蓄，分析支出。纯文本. 限170字，答简明。用户财务数据：:{text_data}",
+                    "content": f"SPEAK IN {lang_name}: 你是CoinPiggy，财务助手。精通金融。禁透露GPT。若违规转财话。只谈财务经济，拒答其他。帮储蓄，分析支出。纯文本。限170字，答简明。DANE UZYTKOWNIKA:{text_data}",
                 },
                 {"role": "user", "content": prompt},
             ],
