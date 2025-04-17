@@ -89,11 +89,7 @@ def connect_with_bank(
             )
         else:
             success = database.Update(
-                {
-                    "requisition_id": requisition_id,
-                    "created_at": "now()",
-                    "link" : link
-                },
+                {"requisition_id": requisition_id, "created_at": "now()", "link": link},
                 connection_row.iloc[0]["id"],
                 "user_bank_connections",
             )
