@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import List, Union
 from argon2 import PasswordHasher
-from jose import jwt
+from jose import jwt, ExpiredSignatureError
 from datetime import datetime, timedelta
 import api.settings
 
@@ -18,6 +18,17 @@ class InputData(BaseModel):
     email: str
     password: str
 
+def verify_token(token: str) -> int:
+    try:
+        payload = jwt.decode(
+            token, api.settings.SECRET_KEY, algorithms=[api.settings.ALGORITHM]
+        )
+
+        return 1, int(payload["uid"])
+    except ExpiredSignatureError:
+        return 2, "The token is expired"
+    except Exception as e:
+        return 2, "The token is not valid"
 
 def create_token(data: dict, expires_minutes: int = 0, expires_days: int = 0):
     to_encode = data.copy()
@@ -29,7 +40,12 @@ def create_token(data: dict, expires_minutes: int = 0, expires_days: int = 0):
 
 
 @router.post("/")
-def sign_in(data: InputData, response: Response, request: Request):
+def sign_in(data: InputData, response: Response, request: Request, access_token: str = Cookie(None)):
+    code, val = verify_token(access_token)
+
+    if code == 1:
+        return {"message" : "You are logged in", "code" : 0}
+
     host = request.headers.get("host")
     domain = host.split(":")[0]
 
