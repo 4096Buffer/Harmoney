@@ -10,23 +10,37 @@ class DataBase:
         self.engine = create_engine(db_url)
 
     def Get(self, query, params={}):
-        with self.engine.connect() as conn:
-            res = pd.read_sql(text(query), conn, params=params)
-            return res
+        try:
+            with self.engine.connect() as conn:
+                res = pd.read_sql(text(query), conn, params=params)
+                return res
+        except:
+            return None
 
     def Update(self, data, uid, table):
-        with self.engine.begin() as conn:
-            for key, val in data.items():
-                conn.execute(
-                    text(f"UPDATE {table} SET {key} = :val WHERE id = :id"),
-                    {"val": val, "id": int(uid)},
-                )
+        try:
+            with self.engine.begin() as conn:
+                for key, val in data.items():
+                    conn.execute(
+                        text(f"UPDATE {table} SET {key} = :val WHERE id = :id"),
+                        {"val": val, "id": int(uid)},
+                    )
+
+                    return True
+        except Exception as e:
+            return False
 
     def Insert(self, data: dict, table: str):
-        with self.engine.begin() as conn:
-            values = ",".join(data)
-            placesholders = ":" + ",:".join(data)
+        try:
+            with self.engine.begin() as conn:
+                values = ",".join(data)
+                placesholders = ":" + ",:".join(data)
 
-            conn.execute(
-                text(f"INSERT INTO {table} ({values}) VALUES ({placesholders})"), data
-            )
+                conn.execute(
+                    text(f"INSERT INTO {table} ({values}) VALUES ({placesholders})"),
+                    data,
+                )
+
+                return True
+        except:
+            return False

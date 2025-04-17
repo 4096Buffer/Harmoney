@@ -94,11 +94,9 @@ def sign_up(data: InputData):
     if not result:
         return {"message": reason, "code": 0}
 
-    try:
-        rows = database.Get(
-            "SELECT * FROM users WHERE email = :email", {"email": email}
-        )
-    except:
+    rows = database.Get("SELECT * FROM users WHERE email = :email", {"email": email})
+
+    if rows is None:
         return {"message": "Unknown error occured.", "code": 0}
 
     if not rows.empty:
@@ -110,25 +108,22 @@ def sign_up(data: InputData):
     ph = PasswordHasher()
     password_hash = ph.hash(password)
 
-    try:
-        # Później dodać tutaj potwierdzenie najpierw emailem.
+    query = database.Insert(
+        {
+            "name": name,
+            "surname": surname,
+            "password": password_hash,
+            "email": email,
+            "plan": 0,
+            "settings": '{ "language" : "PL", "mode" : "dark" }',
+            "is_active": False,
+            "email_verified": False,
+        },
+        "users",
+    )
 
-        database.Insert(
-            {
-                "name": name,
-                "surname": surname,
-                "password": password_hash,
-                "email": email,
-                "plan": 0,
-                "settings": '{ "language" : "PL", "mode" : "dark" }',
-                "is_active": False,
-                "email_verified": False,
-            },
-            "users",
-        )
-
-    except Exception as e:
-        return {"message": "Unknown error occured", "code": 0}
+    if not query:
+        return {"message": "Unknown error occured.", "code": 0}
 
     emailer.send_email(email, "Welcome to Harmoney!", "Explore our new blahblabla")
 

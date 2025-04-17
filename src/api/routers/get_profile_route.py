@@ -75,8 +75,11 @@ def get_profile(
 
     rows = database.Get("SELECT * FROM users WHERE id = :id", {"id": uid})
 
+    if rows is None:
+        return {"message": "Unknown error occured.", "code": 0}
+
     if rows.empty:
-        return {"message": "The token is not valid"}
+        return {"message": "The token is not valid", "code": 0}
 
     row = rows.iloc[0].drop(labels=["password"])
     data = row.to_dict()

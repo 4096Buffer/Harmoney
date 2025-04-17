@@ -56,6 +56,10 @@ def verify_email(
     user_tokens = database.Get(
         "SELECT * FROM email_verify_tokens WHERE user_id = :id", {"id": uid}
     )
+
+    if user_tokens is None:
+        return {"message": "Unknown error occured", "code": 0}
+
     user_token = None
 
     if not user_tokens.empty:
@@ -66,14 +70,17 @@ def verify_email(
             if user_token["expires_at"] > datetime.utcnow() and user_token["active"]:
                 return {"message": "You have an active token!", "code": 0}
             else:
-                database.Update(
+                query = database.Update(
                     {"active": False}, user_token["id"], "email_verify_tokens"
                 )
+
+                if not query:
+                    return {"message": "Unknown error occured", "code": 0}
 
         gen_token = str(uuid.uuid4())
         expires_at = datetime.utcnow() + timedelta(minutes=5)
 
-        database.Insert(
+        query = database.Insert(
             {
                 "token": gen_token,
                 "expires_at": expires_at,
@@ -83,6 +90,9 @@ def verify_email(
             "email_verify_tokens",
         )
 
+        if not query:
+            return {"message": "Unknown error occured", "code": 0}
+
         emailer.send_email(
             row["email"],
             "Harmoney - Verify your E-mail",
@@ -91,13 +101,23 @@ def verify_email(
 
         return {"message": "Successfully sent email", "code": 1}
     else:
-        if user_token["token"] != token:
+        token_row = database.Get(
+            "SELECT * FROM email_verify_tokens WHERE token = :token AND user_id = :uid",
+            {"token": token, "uid": uid},
+        )
+
+        if token_row.empty:
             return {"message": "Invalid token", "code": 0}
 
         if user_token["expires_at"] < datetime.utcnow() or not user_token["active"]:
             return {"message": "The token is expired", "code": 0}
 
-        database.Update({"email_verified": True}, uid, "users")
-        database.Update({"active": False}, user_token["id"], "email_verify_tokens")
+        query = database.Update({"email_verified": True}, uid, "users")
+        query2 = database.Update(
+            {"active": False}, user_token["id"], "email_verify_tokens"
+        )
+
+        if not query or not query2:
+            return {"message": "Unknown error occured", "code": 0}
 
         return {"message": "Successfully verified email", "code": 1}
