@@ -78,3 +78,24 @@ class BankHelper:
             return response.json()["status"]
         else:
             raise Exception("Błąd przy sprawdzaniu statusu requisition.")
+
+    def get_account_id(self, requisition_id: str) -> str:
+        url = f"{self.base_url}/requisitions/{requisition_id}/"
+        response = requests.get(url, headers=self.get_headers())
+
+        if response.status_code == 200:
+            accounts = response.json().get("accounts", [])
+            if not accounts:
+                raise Exception("Brak kont powiązanych z requisition.")
+            return accounts[0]  # zakładamy pierwsze konto
+        else:
+            raise Exception("Błąd przy pobieraniu kont z requisition.")
+
+    def get_transactions(self, account_id: str):
+        url = f"{self.base_url}/accounts/{account_id}/transactions/"
+        response = requests.get(url, headers=self.get_headers())
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception("Błąd przy pobieraniu transakcji z konta.")

@@ -11,6 +11,7 @@
   <button onclick="getProfile()">📄 Pobierz profil</button>
   <button onclick="sendVerification()">📧 Potwierdź e-mail</button>
   <button onclick="connectWithBank()">🏦 Połącz z bankiem</button>
+  <button onclick="loadTransactions()">💸 Pobierz transakcje</button>
 
   <hr>
 
@@ -20,6 +21,9 @@
     <button type="submit">📨 Wyślij</button>
   </form>
   <pre id="assistant-response"></pre>
+
+  <h3>📊 Twoje transakcje</h3>
+  <div id="transactions-table"></div>
 
   <script>
     const API_BASE = "http://127.0.0.1:8000";
@@ -95,7 +99,7 @@
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bank_name: institutionId })  // 👈 JSON z nazwą banku
+        body: JSON.stringify({ bank_name: institutionId })
       })
       .then(res => res.json())
       .then(data => {
@@ -108,7 +112,40 @@
       })
       .catch(err => {
         console.error("❌ Błąd połączenia z bankiem:", err);
-        alert("❌ Błąd połączenia z bankiem ni hao fine shyt! ");
+        alert("❌ Błąd połączenia z bankiem.");
+      });
+    }
+
+    function loadTransactions() {
+      fetch(`${API_BASE}/test-transactions`, {
+        method: "GET",
+        credentials: "include"
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.code !== 1) {
+          alert("❌ Nie udało się pobrać transakcji: " + data.message);
+          return;
+        }
+
+        const transactions = data.message;
+        let tableHtml = "<table border='1' cellpadding='5'><tr><th>Data</th><th>Opis</th><th>Kwota</th><th>Waluta</th></tr>";
+
+        transactions.forEach(tx => {
+          tableHtml += `<tr>
+            <td>${tx.date}</td>
+            <td>${tx.description}</td>
+            <td>${tx.amount}</td>
+            <td>${tx.currency}</td>
+          </tr>`;
+        });
+
+        tableHtml += "</table>";
+        document.getElementById("transactions-table").innerHTML = tableHtml;
+      })
+      .catch(err => {
+        console.error("❌ Błąd przy pobieraniu transakcji:", err);
+        alert("❌ Wystąpił błąd.");
       });
     }
   </script>

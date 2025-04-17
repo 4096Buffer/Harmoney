@@ -11,6 +11,7 @@ from api.routers.get_profile_route import router as get_profile_router
 from api.routers.email_verify_route import router as email_verify_router
 from api.routers.assistant_route import router as assistant_router
 from api.routers.conbank_route import router as conbank_router
+from api.routers.test_transaction_route import router as ttran_router
 
 from api.settings import create_engine
 import api.helpers.database as db
@@ -35,7 +36,7 @@ app.include_router(get_profile_router, prefix="/profile", tags=["Profile"])
 app.include_router(email_verify_router, prefix="/email-verify", tags=["EmailVerify"])
 app.include_router(assistant_router, prefix="/ask-assistant", tags=["AskAssistant"])
 app.include_router(conbank_router, prefix="/connect-bank", tags=["ConnectBank"])
-
+app.include_router(ttran_router, prefix="/test-transactions", tags=["TestTransaction"])
 
 @app.get("/")
 def root():
