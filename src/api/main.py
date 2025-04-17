@@ -36,6 +36,7 @@ app.include_router(email_verify_router, prefix="/email-verify", tags=["EmailVeri
 app.include_router(assistant_router, prefix="/ask-assistant", tags=["AskAssistant"])
 app.include_router(conbank_router, prefix="/connect-bank", tags=["ConnectBank"])
 
+
 @app.get("/")
 def root():
     return {"message": "Error: Empty request"}

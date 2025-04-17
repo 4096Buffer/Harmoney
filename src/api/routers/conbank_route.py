@@ -25,8 +25,10 @@ def get_user_id_from_token(access_token: str = Cookie(None)):
     except Exception:
         return -1
 
+
 class InputData(BaseModel):
     bank_name: str
+
 
 @router.post("/")
 def connect_with_bank(
@@ -35,7 +37,13 @@ def connect_with_bank(
     uid: int = Depends(get_user_id_from_token),
 ):
     bank_name = data.bank_name
-    
+
+    if not bank_name in bank.allowed_banks:
+        return {
+            "message": "This bank is not supported or the code is invalid",
+            "code": 0,
+        }
+
     user_rows = database.Get("SELECT * FROM users WHERE id = :id", {"id": uid})
 
     if user_rows.empty:
@@ -48,8 +56,16 @@ def connect_with_bank(
     if not connection_row.empty:
         row = connection_row.iloc[0]
         created_at = row["created_at"]
+        bank_linked = bank.check_requisition_status(row["requisition_id"]) == "LN"
 
-        if (datetime.utcnow() - created_at).days < 85:
+        if (datetime.utcnow() - created_at).total_seconds() < 600:
+            return {
+                "message": "Successfully created bank connect link.",
+                "link": row["link"],
+                "code": 1,
+            }
+
+        if (datetime.utcnow() - created_at).days < 85 and bank_linked:
             return {
                 "message": "Current connection is still valid. Can't create a new one.",
                 "code": 0,
@@ -67,6 +83,7 @@ def connect_with_bank(
                     "user_id": uid,
                     "requisition_id": requisition_id,
                     "created_at": datetime.utcnow(),
+                    "link": link,
                 },
                 "user_bank_connections",
             )
@@ -74,7 +91,8 @@ def connect_with_bank(
             success = database.Update(
                 {
                     "requisition_id": requisition_id,
-                    "created_at": datetime.utcnow(),
+                    "created_at": "now()",
+                    "link" : link
                 },
                 connection_row.iloc[0]["id"],
                 "user_bank_connections",

@@ -18,6 +18,7 @@ class InputData(BaseModel):
     email: str
     password: str
 
+
 def verify_token(token: str) -> int:
     try:
         payload = jwt.decode(
@@ -30,6 +31,7 @@ def verify_token(token: str) -> int:
     except Exception as e:
         return 2, "The token is not valid"
 
+
 def create_token(data: dict, expires_minutes: int = 0, expires_days: int = 0):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=expires_minutes, days=expires_days)
@@ -40,11 +42,16 @@ def create_token(data: dict, expires_minutes: int = 0, expires_days: int = 0):
 
 
 @router.post("/")
-def sign_in(data: InputData, response: Response, request: Request, access_token: str = Cookie(None)):
+def sign_in(
+    data: InputData,
+    response: Response,
+    request: Request,
+    access_token: str = Cookie(None),
+):
     code, val = verify_token(access_token)
 
     if code == 1:
-        return {"message" : "You are logged in", "code" : 0}
+        return {"message": "You are logged in", "code": 0}
 
     host = request.headers.get("host")
     domain = host.split(":")[0]

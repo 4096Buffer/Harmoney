@@ -9,6 +9,21 @@ class BankHelper:
         self.client_id = api.settings.CLIENT_ID
         self.client_secret = api.settings.CLIENT_SECRET
         self.access_token = None
+        self.allowed_banks = [
+            "PKO_BPKOPLPW",
+            "SANDBOX-MBANK",
+            "INGB_PLINGB22",
+            "PKOB_PLPPKEPWW",
+            "WBKP_PLWBKPLPP",
+            "ALBP_PLALBPPLPW",
+            "PPAB_PLPPABPLPK",
+            "BIGB_PLBIGBPLPW",
+            "AGRIPLPR",
+            "CITBPLCXXXX",
+            "EBOSPLPW",
+            "NESBPLPW",
+            "POCZPLP4",
+        ]
 
     def get_token(self):
         token_url = f"{self.base_url}/token/new/"
@@ -43,7 +58,7 @@ class BankHelper:
         payload = {
             "redirect": redirect_url,
             "institution_id": institution_id,
-            "reference": f"user-{uid}",
+            "reference": f"user-{uid}-{int(datetime.utcnow().timestamp())}",
             "user_language": "PL",
         }
 

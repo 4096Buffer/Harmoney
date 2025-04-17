@@ -26,7 +26,7 @@ class DataBase:
                         {"val": val, "id": int(uid)},
                     )
 
-                    return True
+            return True
         except Exception as e:
             return False
 
@@ -41,6 +41,6 @@ class DataBase:
                     data,
                 )
 
-                return True
+            return True
         except:
             return False
