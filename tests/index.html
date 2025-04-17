@@ -117,37 +117,56 @@
     }
 
     function loadTransactions() {
-      fetch(`${API_BASE}/test-transactions`, {
-        method: "GET",
-        credentials: "include"
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.code !== 1) {
-          alert("❌ Nie udało się pobrać transakcji: " + data.message);
-          return;
-        }
+    fetch(`${API_BASE}/test-transactions`, {
+      method: "GET",
+      credentials: "include"
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.code !== 1) {
+        alert("❌ Nie udało się pobrać transakcji: " + data.message);
+        return;
+      }
 
-        const transactions = data.message;
-        let tableHtml = "<table border='1' cellpadding='5'><tr><th>Data</th><th>Opis</th><th>Kwota</th><th>Waluta</th></tr>";
+      const transactions = data.message.booked || data.message; // jeśli struktura to { booked: [...] }
 
-        transactions.forEach(tx => {
-          tableHtml += `<tr>
-            <td>${tx.date}</td>
-            <td>${tx.description}</td>
-            <td>${tx.amount}</td>
-            <td>${tx.currency}</td>
-          </tr>`;
-        });
+      if (!Array.isArray(transactions) || transactions.length === 0) {
+        document.getElementById("transactions-table").innerHTML = "Brak transakcji.";
+        return;
+      }
 
-        tableHtml += "</table>";
-        document.getElementById("transactions-table").innerHTML = tableHtml;
-      })
-      .catch(err => {
-        console.error("❌ Błąd przy pobieraniu transakcji:", err);
-        alert("❌ Wystąpił błąd.");
+      // Pobierz unikalne klucze z pierwszego obiektu
+      const keys = Object.keys(transactions[0]);
+
+      let tableHtml = "<table border='1' cellpadding='5'><tr>";
+      keys.forEach(key => {
+        tableHtml += `<th>${key}</th>`;
       });
-    }
+      tableHtml += "</tr>";
+
+      transactions.forEach(tx => {
+        tableHtml += "<tr>";
+        keys.forEach(key => {
+          let val = tx[key];
+
+          // Jeżeli wartość jest obiektem, zrób JSON.stringify
+          if (typeof val === "object" && val !== null) {
+            val = JSON.stringify(val);
+          }
+
+          tableHtml += `<td>${val ?? ""}</td>`;
+        });
+        tableHtml += "</tr>";
+      });
+
+      tableHtml += "</table>";
+      document.getElementById("transactions-table").innerHTML = tableHtml;
+    })
+    .catch(err => {
+      console.error("❌ Błąd przy pobieraniu transakcji:", err);
+      alert("❌ Wystąpił błąd.");
+    });
+  }
   </script>
 </body>
 </html>

@@ -58,7 +58,7 @@ def connect_with_bank(
         created_at = row["created_at"]
         bank_linked = bank.check_requisition_status(row["requisition_id"]) == "LN"
 
-        if (datetime.utcnow() - created_at).total_seconds() < 600:
+        if (datetime.utcnow() - created_at).total_seconds() < 600 and not bank_linked:
             return {
                 "message": "Successfully created bank connect link.",
                 "link": row["link"],
