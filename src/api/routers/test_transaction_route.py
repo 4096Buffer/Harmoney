@@ -6,11 +6,12 @@ from jose import jwt
 import api.settings
 import json
 from datetime import datetime, timedelta
+from cryptography.fernet import Fernet
 
 router = APIRouter()
 database = db.DataBase()
 bank = BankHelper()
-
+fernet = Fernet(api.settings.BANK_ENCRYPTION_KEY)
 
 def get_user_id_from_token(access_token: str = Cookie(None)):
     if not access_token:
@@ -52,7 +53,7 @@ def get_full_transactions(
     if conn_row.empty:
         return {"message": "Nie masz podłączonego konta bankowego.", "code": 0}
 
-    requisition_id = conn_row.iloc[0]["requisition_id"]
+    requisition_id = fernet.decrypt(conn_row.iloc[0]["requisition_id"].encode()).decode()
 
     try:
         account_id = bank.get_account_id(requisition_id)

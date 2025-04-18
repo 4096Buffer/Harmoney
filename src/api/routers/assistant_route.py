@@ -52,12 +52,12 @@ async def ask(
     plan = row["plan"]
     plan_options = database.Get(
         "SELECT * FROM plans_options WHERE plan_id = :id", {"id": int(plan)}
-    )
+    ).iloc[0]
 
-    if int(plan_options["ai_assistant_limit"].iloc[0]) == 0:
+    if int(plan_options["ai_assistant_limit"]) == 0:
         return {"message": "You don't have access to this feature", "code": 0}
 
-    if plan_options["assistent_history"] == False and convo_id is not None:
+    if plan_options["assistant_history"] == False and convo_id is not None:
         return {"message": "You don't have access to history feature", "code": 0}
 
     month_now = datetime.now().month
@@ -89,14 +89,24 @@ async def ask(
             "monthly_token_usage",
         )
     else:
-        if chars_used["chars_used"].iloc[0] + prompt_count > int(
-            plan_options["ai_assistant_limit"].iloc[0]
+        if chars_used.iloc[0]["month"] < datetime.now().month:
+            query = database.Update(
+                {"chars_used": 0},
+                chars_used.iloc[0]["id"],
+                "monthly_token_usage",
+            )
+
+            if not query:
+                return {"message": "Unknown error occured", "code": 0}
+
+        if chars_used.iloc[0]["chars_used"] + prompt_count > int(
+            plan_options["ai_assistant_limit"]
         ):
             return {"message": "You have reached your monthly limit.", "code": 0}
 
         query = database.Update(
-            {"chars_used": int(chars_used["chars_used"].iloc[0] + prompt_count)},
-            chars_used["id"],
+            {"chars_used": int(chars_used.iloc[0]["chars_used"] + prompt_count)},
+            chars_used.iloc[0]["id"],
             "monthly_token_usage",
         )
 
@@ -110,13 +120,13 @@ async def ask(
         None, assistant.Ask, prompt
     )
 
-    if plan_options["assistent_history"]:
+    if plan_options["assistant_history"]:
         if not convo_id:
             row = database.Get("SELECT * FROM assistant_conversations WHERE user_id = :id ORDER BY id DESC LIMIT 1", { "id" : uid })
             cid = 0
 
             if not row.empty:
-                cid = row.iloc[0]["id"] + 1
+                cid = int(row.iloc[0]["id"]) + 1
 
             if cid > 60:
                 return {"message" : "You have exceeded the conversations limit. Delete the other ones to create a new one.", "code" : 0}
@@ -125,16 +135,16 @@ async def ask(
 
             if not query:
                 return {"message" : response, "code" : 1}
-                
             
             if row is None:
                 return {"message" : response, "code" : 1}
 
-            convo_id = row.iloc[0]["id"]
+            convo_id = cid
             
         query = database.Insert({"conversation_id" : convo_id, "user_message" : prompt, "assistant_response" : response}, "assistant_conversations_messages")
 
         if not query:
+            print('NO QUERY BITCH')
             return {"message" : response, "code" : 1}
             
         return {"message": response, "code": 1, "conversation_id" : convo_id}

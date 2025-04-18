@@ -95,8 +95,8 @@ def verify_email(
 
         emailer.send_email(
             row["email"],
-            "Harmoney - Verify your E-mail",
-            f'<a href="http://127.0.0.1:8000/email-verify?token={gen_token}&mode=1">Click here to verify -> Verify</a>',
+            f"Witaj w Harmoney {row['name']}! - Zweryfikuj e-mail",
+            f'<a href="http://127.0.0.1:8000/email-verify?token={gen_token}&mode=1">Zweryfikuj konto</a>',
         )
 
         return {"message": "Successfully sent email", "code": 1}

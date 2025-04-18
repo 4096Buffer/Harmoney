@@ -8,10 +8,12 @@ from api.helpers.bank_helper import BankHelper
 from pydantic import BaseModel
 from jose import jwt
 import api.settings
+from cryptography.fernet import Fernet
 
 router = APIRouter()
 database = db.DataBase()
 bank = BankHelper()
+fernet = Fernet(api.settings.BANK_ENCRYPTION_KEY)
 
 
 def get_user_id_from_token(access_token: str = Cookie(None)):
@@ -56,7 +58,9 @@ def connect_with_bank(
     if not connection_row.empty:
         row = connection_row.iloc[0]
         created_at = row["created_at"]
-        bank_linked = bank.check_requisition_status(row["requisition_id"]) == "LN"
+        
+        requisition_id = fernet.decrypt(row["requisition_id"].encode()).decode()
+        bank_linked = bank.check_requisition_status(requisition_id) == "LN"
 
         if (datetime.utcnow() - created_at).total_seconds() < 600 and not bank_linked:
             return {
@@ -73,8 +77,8 @@ def connect_with_bank(
 
     try:
         result = bank.create_requisition(bank_name, uid)
+        requisition_id = fernet.encrypt(result["requisition_id"].encode()).decode()
 
-        requisition_id = result["requisition_id"]
         link = result["link"]
 
         if connection_row.empty:

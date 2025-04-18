@@ -114,7 +114,7 @@ def sign_up(data: InputData):
             "surname": surname,
             "password": password_hash,
             "email": email,
-            "plan": 0,
+            "plan": 1,
             "settings": '{ "language" : "PL", "mode" : "dark" }',
             "is_active": False,
             "email_verified": False,
