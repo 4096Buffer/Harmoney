@@ -2,31 +2,62 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>JWT Auth Test</title>
+  <title>Harmoney Dashboard</title>
+  <style>
+    .chat-history {
+      border: 1px solid #ccc;
+      padding: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+    .chat-bubble {
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 5px;
+    }
+    .user-msg {
+      background-color: #d1f0ff;
+    }
+    .assistant-msg {
+      background-color: #f1f1f1;
+    }
+  </style>
 </head>
 <body>
-  <h1>JWT Auth Test</h1>
+  <h1>Harmoney</h1>
 
   <button onclick="signIn()">🔐 Zaloguj się</button>
   <button onclick="getProfile()">📄 Pobierz profil</button>
   <button onclick="sendVerification()">📧 Potwierdź e-mail</button>
   <button onclick="connectWithBank()">🏦 Połącz z bankiem</button>
   <button onclick="loadTransactions()">💸 Pobierz transakcje</button>
+  <button onclick="loadConversations()">💬 Pokaż rozmowy</button>
 
   <hr>
 
-  <h2>🧠 Zadaj pytanie asystentowi</h2>
+  <h2>🧠 Rozmowa z asystentem</h2>
+  <label for="convo-select">Wybierz konwersację:</label>
+  <select id="convo-select">
+    <option value="">➕ Nowa rozmowa</option>
+  </select>
+
+  <div class="chat-history" id="chat-history">
+    <em>Brak wiadomości.</em>
+  </div>
+
   <form onsubmit="askAssistant(event)">
-    <input type="text" id="prompt" placeholder="Napisz pytanie..." style="width: 300px;">
+    <input type="text" id="prompt" placeholder="Zadaj pytanie..." style="width: 300px;">
     <button type="submit">📨 Wyślij</button>
   </form>
+
   <pre id="assistant-response"></pre>
 
   <h3>📊 Twoje transakcje</h3>
   <div id="transactions-table"></div>
-
   <script>
     const API_BASE = "http://127.0.0.1:8000";
+    let currentConvoId = null;
 
     function signIn() {
       fetch(`${API_BASE}/sign-in/`, {
@@ -38,7 +69,7 @@
       .then(res => res.json())
       .then(data => {
         console.log("✅ Zalogowano:", data);
-        alert("Zalogowano! Sprawdź konsolę.");
+        alert("Zalogowano!");
       })
       .catch(err => console.error("❌ Błąd logowania:", err));
     }
@@ -50,8 +81,8 @@
       })
       .then(res => res.json())
       .then(data => {
-        console.log("📄 Profil użytkownika:", data);
-        alert("Profil załadowany! Sprawdź konsolę.");
+        console.log("📄 Profil:", data);
+        alert("Załadowano profil!");
       })
       .catch(err => console.error("❌ Błąd pobierania profilu:", err));
     }
@@ -62,111 +93,154 @@
         credentials: "include"
       })
       .then(res => res.json())
-      .then(data => {
-        console.log("📧 Weryfikacja e-maila:", data);
-        alert(data.message);
-      })
-      .catch(err => console.error("❌ Błąd przy wysyłce e-maila:", err));
-    }
-
-    function askAssistant(event) {
-      event.preventDefault();
-      const prompt = document.getElementById("prompt").value;
-
-      fetch(`${API_BASE}/ask-assistant`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ prompt: prompt })
-      })
-      .then(res => res.json())
-      .then(data => {
-        console.log("🤖 Odpowiedź asystenta:", data);
-        document.getElementById("assistant-response").innerText = data.message || "Brak odpowiedzi.";
-      })
-      .catch(err => {
-        console.error("❌ Błąd zapytania:", err);
-        document.getElementById("assistant-response").innerText = "Błąd podczas zapytania do asystenta.";
-      });
+      .then(data => alert(data.message))
+      .catch(err => console.error("❌ Błąd przy weryfikacji:", err));
     }
 
     function connectWithBank() {
-      const institutionId = prompt("Podaj ID banku (np. SANDBOX-MBANK, PKO_BPKOPLPW, etc.):");
-
+      const institutionId = prompt("Podaj ID banku (np. SANDBOX-MBANK, PKO_BPKOPLPW):");
       if (!institutionId) return;
 
       fetch(`${API_BASE}/connect-bank/`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ bank_name: institutionId })
       })
       .then(res => res.json())
       .then(data => {
         if (data.code === 1 && data.link) {
-          console.log("🔗 Link do banku:", data.link);
           window.location.href = data.link;
         } else {
-          alert("❌ Nie udało się utworzyć połączenia: " + data.message);
+          alert("❌ Błąd: " + data.message);
         }
       })
-      .catch(err => {
-        console.error("❌ Błąd połączenia z bankiem:", err);
-        alert("❌ Błąd połączenia z bankiem.");
-      });
+      .catch(err => console.error("❌ Błąd połączenia z bankiem:", err));
     }
 
     function loadTransactions() {
-    fetch(`${API_BASE}/test-transactions`, {
-      method: "GET",
-      credentials: "include"
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.code !== 1) {
-        alert("❌ Nie udało się pobrać transakcji: " + data.message);
-        return;
-      }
+      fetch(`${API_BASE}/test-transactions`, {
+        method: "GET",
+        credentials: "include"
+      })
+      .then(res => res.json())
+      .then(data => {
+        const transactions = data.message.booked || data.message;
+        const tableDiv = document.getElementById("transactions-table");
 
-      const transactions = data.message.booked || data.message; // jeśli struktura to { booked: [...] }
+        if (!Array.isArray(transactions) || transactions.length === 0) {
+          tableDiv.innerHTML = "Brak transakcji.";
+          return;
+        }
 
-      if (!Array.isArray(transactions) || transactions.length === 0) {
-        document.getElementById("transactions-table").innerHTML = "Brak transakcji.";
-        return;
-      }
+        const keys = Object.keys(transactions[0]);
+        let tableHtml = "<table border='1' cellpadding='5'><tr>";
+        keys.forEach(key => tableHtml += `<th>${key}</th>`);
+        tableHtml += "</tr>";
 
-      // Pobierz unikalne klucze z pierwszego obiektu
-      const keys = Object.keys(transactions[0]);
+        transactions.forEach(tx => {
+          tableHtml += "<tr>";
+          keys.forEach(key => {
+            let val = tx[key];
+            if (typeof val === "object" && val !== null) val = JSON.stringify(val);
+            tableHtml += `<td>${val ?? ""}</td>`;
+          });
+          tableHtml += "</tr>";
+        });
 
-      let tableHtml = "<table border='1' cellpadding='5'><tr>";
-      keys.forEach(key => {
-        tableHtml += `<th>${key}</th>`;
+        tableHtml += "</table>";
+        tableDiv.innerHTML = tableHtml;
+      })
+      .catch(err => {
+        console.error("❌ Błąd transakcji:", err);
+        alert("❌ Wystąpił błąd.");
       });
-      tableHtml += "</tr>";
+    }
 
-      transactions.forEach(tx => {
-        tableHtml += "<tr>";
-        keys.forEach(key => {
-          let val = tx[key];
+    function loadConversations() {
+      fetch(`${API_BASE}/get-conversations`, {
+        method: "POST",
+        credentials: "include"
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.code !== 1) {
+          alert(data.message);
+          return;
+        }
 
-          // Jeżeli wartość jest obiektem, zrób JSON.stringify
-          if (typeof val === "object" && val !== null) {
-            val = JSON.stringify(val);
+        const select = document.getElementById("convo-select");
+        select.innerHTML = `<option value="">➕ Nowa rozmowa</option>`;
+        data.message.forEach(convo => {
+          const option = document.createElement("option");
+          option.value = convo.id;
+          option.text = `Konwersacja #${convo.id}`;
+          select.appendChild(option);
+        });
+
+        select.onchange = () => {
+          currentConvoId = select.value || null;
+          const convo = data.message.find(c => c.id == currentConvoId);
+          const historyDiv = document.getElementById("chat-history");
+          historyDiv.innerHTML = "";
+
+          if (!convo || !convo.messages.length) {
+            historyDiv.innerHTML = "<em>Brak wiadomości.</em>";
+            return;
           }
 
-          tableHtml += `<td>${val ?? ""}</td>`;
-        });
-        tableHtml += "</tr>";
-      });
+          convo.messages.forEach(m => {
+            historyDiv.innerHTML += `
+              <div class="chat-bubble user-msg"><strong>Ty:</strong> ${m.prompt}</div>
+              <div class="chat-bubble assistant-msg"><strong>Asystent:</strong> ${m.response}</div>
+            `;
+          });
+        };
+      })
+      .catch(err => console.error("❌ Błąd konwersacji:", err));
+    }
 
-      tableHtml += "</table>";
-      document.getElementById("transactions-table").innerHTML = tableHtml;
-    })
-    .catch(err => {
-      console.error("❌ Błąd przy pobieraniu transakcji:", err);
-      alert("❌ Wystąpił błąd.");
-    });
-  }
+    function askAssistant(event) {
+      event.preventDefault();
+      const prompt = document.getElementById("prompt").value;
+      if (!prompt) return alert("Wpisz pytanie.");
+
+      fetch(`${API_BASE}/ask-assistant`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ prompt: prompt, convo_id: currentConvoId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const chat = document.getElementById("chat-history");
+
+        if (data.message) {
+          chat.innerHTML += `
+            <div class="chat-bubble user-msg"><strong>Ty:</strong> ${prompt}</div>
+            <div class="chat-bubble assistant-msg"><strong>Asystent:</strong> ${data.message}</div>
+          `;
+        }
+
+        if (data.conversation_id) {
+          currentConvoId = data.conversation_id;
+          const select = document.getElementById("convo-select");
+          if (![...select.options].some(opt => opt.value == currentConvoId)) {
+            const option = document.createElement("option");
+            option.value = currentConvoId;
+            option.text = `Konwersacja #${currentConvoId}`;
+            option.selected = true;
+            select.appendChild(option);
+          }
+        }
+
+        document.getElementById("prompt").value = "";
+      })
+      .catch(err => {
+        console.error("❌ Błąd asystenta:", err);
+        alert("❌ Błąd zapytania.");
+      });
+    }
   </script>
 </body>
 </html>

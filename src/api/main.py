@@ -28,7 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(RateLimiterMiddleware, max_requests_per_minute=30)
+app.add_middleware(RateLimiterMiddleware, requests_limit=30)
 
 app.include_router(spend_style_router, prefix="/spend-style", tags=["SpendStyle"])
 app.include_router(future_spend_router, prefix="/future-spend", tags=["FutureSpend"])

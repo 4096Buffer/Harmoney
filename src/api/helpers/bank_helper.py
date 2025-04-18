@@ -120,7 +120,7 @@ class BankHelper:
 
         url = f"{self.base_url}/accounts/{account_id}/transactions/"
         response = requests.get(url, headers=self.get_headers())
-
+        
         if response.status_code == 200:
             return response.json()
         else:

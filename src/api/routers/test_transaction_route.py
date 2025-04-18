@@ -30,17 +30,21 @@ def get_full_transactions(
     transactions_cache: str = Cookie(default=None),
     uid: int = Depends(get_user_id_from_token),
 ):
+    host = request.headers.get("host")
+    domain = host.split(":")[0]
+
     if uid < 0:
         return {"message": "Invalid token", "code": 0}
 
     # Jeśli istnieje ciasteczko – parsujemy i zwracamy
     if transactions_cache:
+        print('GO')
         try:
             transactions = json.loads(transactions_cache)
             return {"message": transactions, "cached": True, "code": 1}
         except:
             pass  # coś poszło nie tak — pobieramy z API poniżej
-
+    
     # Brak ciasteczka lub błędne dane – pobieramy z GoCardless
     conn_row = database.Get(
         "SELECT * FROM user_bank_connections WHERE user_id = :id", {"id": uid}
@@ -66,8 +70,9 @@ def get_full_transactions(
             value=json.dumps(transactions),
             max_age=expire_time,
             httponly=True,
-            secure=True,
-            samesite="Lax",
+            secure=False,
+            samesite="None",
+            domain = domain
         )
 
         return response
