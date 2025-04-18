@@ -1,7 +1,9 @@
 # src/api/main.py
 
 from fastapi import FastAPI
+
 from fastapi.middleware.cors import CORSMiddleware
+from api.middleware.rate_limiter import RateLimiterMiddleware
 
 from api.routers.spend_style_route import router as spend_style_router
 from api.routers.future_spend_route import router as future_spend_router
@@ -12,9 +14,6 @@ from api.routers.email_verify_route import router as email_verify_router
 from api.routers.assistant_route import router as assistant_router
 from api.routers.conbank_route import router as conbank_router
 from api.routers.test_transaction_route import router as ttran_router
-
-from api.settings import create_engine
-import api.helpers.database as db
 
 app = FastAPI(
     title="Harmoney API", description="Asystent finansowy oparty o AI", version="0.1.0"
@@ -28,6 +27,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(RateLimiterMiddleware, max_requests_per_minute=30)
+
 app.include_router(spend_style_router, prefix="/spend-style", tags=["SpendStyle"])
 app.include_router(future_spend_router, prefix="/future-spend", tags=["FutureSpend"])
 app.include_router(sign_in_router, prefix="/sign-in", tags=["SignIn"])
@@ -40,4 +41,4 @@ app.include_router(ttran_router, prefix="/test-transactions", tags=["TestTransac
 
 @app.get("/")
 def root():
-    return {"message": "Error: Empty request"}
+    return {"message": "Error: Empty request", "code" : 0}

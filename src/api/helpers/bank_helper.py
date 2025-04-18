@@ -42,7 +42,7 @@ class BankHelper:
         response = requests.post(
             token_url,
             json={"secret_id": self.client_id, "secret_key": self.client_secret},
-        )'
+        )
         
         #Jeśli zapytanie się udało zwracamy token access, jeśli nie rzucamy błąd
 
@@ -125,3 +125,6 @@ class BankHelper:
             return response.json()
         else:
             raise Exception("Błąd przy pobieraniu transakcji z konta.")
+
+    def transform_data(self, data):
+        booked = data["transactions"]["booked"]
