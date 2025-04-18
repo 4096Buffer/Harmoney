@@ -16,7 +16,9 @@ def get_user_id_from_token(access_token: str = Cookie(None)):
     if not access_token:
         return -1
     try:
-        payload = jwt.decode(access_token, api.settings.SECRET_KEY, algorithms=[api.settings.ALGORITHM])
+        payload = jwt.decode(
+            access_token, api.settings.SECRET_KEY, algorithms=[api.settings.ALGORITHM]
+        )
         return int(payload["uid"])
     except Exception:
         return -1
@@ -40,7 +42,9 @@ def get_full_transactions(
             pass  # coś poszło nie tak — pobieramy z API poniżej
 
     # Brak ciasteczka lub błędne dane – pobieramy z GoCardless
-    conn_row = database.Get("SELECT * FROM user_bank_connections WHERE user_id = :id", {"id": uid})
+    conn_row = database.Get(
+        "SELECT * FROM user_bank_connections WHERE user_id = :id", {"id": uid}
+    )
     if conn_row.empty:
         return {"message": "Nie masz podłączonego konta bankowego.", "code": 0}
 
@@ -52,7 +56,9 @@ def get_full_transactions(
         transactions = tx_data.get("transactions", {})
 
         # Zapisujemy transakcje do ciasteczka na 24h
-        response = JSONResponse(content={"message": transactions, "cached": False, "code": 1})
+        response = JSONResponse(
+            content={"message": transactions, "cached": False, "code": 1}
+        )
         expire_time = 60 * 60 * 24  # 24 godziny w sekundach
 
         response.set_cookie(

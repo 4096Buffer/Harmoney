@@ -5,15 +5,15 @@ import api.settings
 
 class BankHelper:
     def __init__(self):
-        
-        #DANE DO API
-        
+
+        # DANE DO API
+
         self.base_url = "https://bankaccountdata.gocardless.com/api/v2"
         self.client_id = api.settings.CLIENT_ID
         self.client_secret = api.settings.CLIENT_SECRET
         self.access_token = None
-        
-        #Lista DOZWOLONYCH BANKÓW
+
+        # Lista DOZWOLONYCH BANKÓW
 
         self.allowed_banks = [
             "PKO_BPKOPLPW",
@@ -32,19 +32,19 @@ class BankHelper:
         ]
 
     def get_token(self):
-        
-        #ADRES do API
-        
+
+        # ADRES do API
+
         token_url = f"{self.base_url}/token/new/"
 
-        #Wysyłamy do API dane
+        # Wysyłamy do API dane
 
         response = requests.post(
             token_url,
             json={"secret_id": self.client_id, "secret_key": self.client_secret},
         )
-        
-        #Jeśli zapytanie się udało zwracamy token access, jeśli nie rzucamy błąd
+
+        # Jeśli zapytanie się udało zwracamy token access, jeśli nie rzucamy błąd
 
         if response.status_code == 200:
             self.access_token = response.json()["access"]
@@ -53,7 +53,7 @@ class BankHelper:
             raise Exception("Nie udało się uzyskać access tokenu.")
 
     def get_headers(self):
-        #Zwracamy nagłówki do zapytania api z tokenem
+        # Zwracamy nagłówki do zapytania api z tokenem
 
         if not self.access_token:
             self.get_token()
@@ -69,7 +69,7 @@ class BankHelper:
         uid: int,
         redirect_url: str = "https://harmoney.app/bank-connected",
     ):
-        #Tworzymy requisition
+        # Tworzymy requisition
 
         url = f"{self.base_url}/requisitions/"
 
@@ -80,7 +80,7 @@ class BankHelper:
             "user_language": "PL",
         }
 
-        #Wysyłamy zapytanie api o utworzenie requisition id
+        # Wysyłamy zapytanie api o utworzenie requisition id
 
         response = requests.post(url, headers=self.get_headers(), json=payload)
 
@@ -91,7 +91,7 @@ class BankHelper:
             raise Exception("Błąd przy tworzeniu requisition.")
 
     def check_requisition_status(self, requisition_id: str):
-        #Sprawdzamy status requisiton użytkownika(czy jest połączony, czy jest w trakcie, czy nie jest) 
+        # Sprawdzamy status requisiton użytkownika(czy jest połączony, czy jest w trakcie, czy nie jest)
 
         url = f"{self.base_url}/requisitions/{requisition_id}/"
         response = requests.get(url, headers=self.get_headers())
@@ -102,7 +102,7 @@ class BankHelper:
             raise Exception("Błąd przy sprawdzaniu statusu requisition.")
 
     def get_account_id(self, requisition_id: str) -> str:
-        #Zwracamy id konta z requisiton id
+        # Zwracamy id konta z requisiton id
 
         url = f"{self.base_url}/requisitions/{requisition_id}/"
         response = requests.get(url, headers=self.get_headers())
@@ -116,8 +116,8 @@ class BankHelper:
             raise Exception("Błąd przy pobieraniu kont z requisition.")
 
     def get_transactions(self, account_id: str):
-        #Zwracamy transakcje z konta
-        
+        # Zwracamy transakcje z konta
+
         url = f"{self.base_url}/accounts/{account_id}/transactions/"
         response = requests.get(url, headers=self.get_headers())
 

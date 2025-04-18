@@ -14,6 +14,7 @@ from api.routers.email_verify_route import router as email_verify_router
 from api.routers.assistant_route import router as assistant_router
 from api.routers.conbank_route import router as conbank_router
 from api.routers.test_transaction_route import router as ttran_router
+from api.routers.get_convos_route import router as get_convos_router
 
 app = FastAPI(
     title="Harmoney API", description="Asystent finansowy oparty o AI", version="0.1.0"
@@ -38,7 +39,8 @@ app.include_router(email_verify_router, prefix="/email-verify", tags=["EmailVeri
 app.include_router(assistant_router, prefix="/ask-assistant", tags=["AskAssistant"])
 app.include_router(conbank_router, prefix="/connect-bank", tags=["ConnectBank"])
 app.include_router(ttran_router, prefix="/test-transactions", tags=["TestTransaction"])
+app.include_router(get_convos_router, prefix="/get-conversations", tags=["GetConvos"])
 
 @app.get("/")
 def root():
-    return {"message": "Error: Empty request", "code" : 0}
+    return {"message": "Error: Empty request", "code": 0}
