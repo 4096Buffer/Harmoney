@@ -28,7 +28,6 @@ def get_user_id_from_token(access_token: str = Cookie(None)):
 @router.get("/")
 def get_full_transactions(
     request: Request,
-    transactions_cache: str = Cookie(default=None),
     uid: int = Depends(get_user_id_from_token),
 ):
     host = request.headers.get("host")
@@ -37,21 +36,16 @@ def get_full_transactions(
     if uid < 0:
         return {"message": "Invalid token", "code": 0}
 
-    # Jeśli istnieje ciasteczko – parsujemy i zwracamy
-    if transactions_cache:
-        print('GO')
-        try:
-            transactions = json.loads(transactions_cache)
-            return {"message": transactions, "cached": True, "code": 1}
-        except:
-            pass  # coś poszło nie tak — pobieramy z API poniżej
-    
     # Brak ciasteczka lub błędne dane – pobieramy z GoCardless
     conn_row = database.Get(
         "SELECT * FROM user_bank_connections WHERE user_id = :id", {"id": uid}
     )
     if conn_row.empty:
         return {"message": "Nie masz podłączonego konta bankowego.", "code": 0}
+
+    if conn_row.iloc[0]["last_used"] is not None:
+        if (datetime.now() - conn_row.iloc[0]["last_used"]) < timedelta(hours=24):
+            return {"message" : "You have hit the limit", "code" : 0}
 
     requisition_id = fernet.decrypt(conn_row.iloc[0]["requisition_id"].encode()).decode()
 
@@ -64,17 +58,11 @@ def get_full_transactions(
         response = JSONResponse(
             content={"message": transactions, "cached": False, "code": 1}
         )
-        expire_time = 60 * 60 * 24  # 24 godziny w sekundach
+        
+        query = database.Update({"last_used" : "now()"}, conn_row.iloc[0]["id"], "user_bank_connections")
 
-        response.set_cookie(
-            key="transactions_cache",
-            value=json.dumps(transactions),
-            max_age=expire_time,
-            httponly=True,
-            secure=False,
-            samesite="None",
-            domain = domain
-        )
+        if not query:
+            return {"message" : "error", "code" : 0}
 
         return response
 

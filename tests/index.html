@@ -59,8 +59,94 @@
   <script>
     const API_BASE = "http://127.0.0.1:8000";
     let currentConvoId = "";
-    // pamiętamy historię w JS: mapujemy convoId → lista wiadomości
     const chatHistories = {};
+
+    const DB_NAME = "HarmoneyCache";
+    const DB_VERSION = 1;
+    const STORE_NAME = "transactions";
+    const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onerror = () => reject("❌ IndexedDB error");
+        req.onsuccess = () => resolve(req.result);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME);
+          }
+        };
+      });
+    }
+
+    function saveToDB(key, data) {
+      return openDB().then(db => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+        store.put({ value: data, timestamp: Date.now() }, key);
+        return tx.complete;
+      });
+    }
+
+    function loadFromDB(key) {
+      return openDB().then(db => {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, "readonly");
+          const store = tx.objectStore(STORE_NAME);
+          const req = store.get(key);
+          req.onsuccess = () => {
+            const result = req.result;
+            if (!result || (Date.now() - result.timestamp > CACHE_TTL_MS)) {
+              resolve(null);
+            } else {
+              resolve(result.value);
+            }
+          };
+          req.onerror = () => resolve(null);
+        });
+      });
+    }
+    function renderTransactions(tx) {
+      const div = document.getElementById("transactions-table");
+      if (!Array.isArray(tx) || !tx.length) {
+        div.innerHTML = "Brak transakcji.";
+        return;
+      }
+      const keys = Object.keys(tx[0]);
+      let html = "<table border=1><tr>" + keys.map(k => `<th>${k}</th>`).join("") + "</tr>";
+      tx.forEach(r => {
+        html += "<tr>" + keys.map(k => {
+          let v = r[k];
+          if (typeof v === "object" && v !== null) v = JSON.stringify(v);
+          return `<td>${v ?? ""}</td>`;
+        }).join("") + "</tr>";
+      });
+      div.innerHTML = html + "</table>";
+    }
+
+    async function loadTransactions() {
+      const cached = await loadFromDB("transactions");
+      if (cached) {
+        renderTransactions(cached);
+        console.log("💾 Wczytano z cache IndexedDB");
+        return;
+      }
+
+      fetch(`${API_BASE}/test-transactions`, { method: "GET", credentials: "include" })
+        .then(res => res.json())
+        .then(data => {
+          const tx = data.message.booked || data.message;
+          if (!Array.isArray(tx) || !tx.length) {
+            document.getElementById("transactions-table").innerHTML = "Brak transakcji.";
+            return;
+          }
+          saveToDB("transactions", tx);
+          renderTransactions(tx);
+          console.log("⬇️ Dane pobrane z API i zapisane do IndexedDB");
+        });
+    }
+
     function signIn() {
       fetch(`${API_BASE}/sign-in/`, {
         method: "POST",
@@ -91,102 +177,82 @@
       if (!inst) return;
       fetch(`${API_BASE}/connect-bank/`, {
         method: "POST", credentials: "include",
-        headers:{"Content-Type":"application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bank_name: inst })
       })
       .then(res => res.json())
       .then(data => {
-        if (data.code===1 && data.link) window.location.href=data.link;
-        else alert("❌ "+data.message);
+        if (data.code === 1 && data.link) window.location.href = data.link;
+        else alert("❌ " + data.message);
       });
     }
 
-    function loadTransactions() {
-      fetch(`${API_BASE}/test-transactions`, { method:"GET", credentials:"include" })
-        .then(res=>res.json())
-        .then(data=>{
-          const tx = data.message.booked||data.message;
-          const div = document.getElementById("transactions-table");
-          if(!Array.isArray(tx)||!tx.length){ div.innerHTML="Brak transakcji."; return; }
-          const keys=Object.keys(tx[0]);
-          let html="<table border=1><tr>"+keys.map(k=>`<th>${k}</th>`).join("")+"</tr>";
-          tx.forEach(r=>{
-            html+="<tr>"+keys.map(k=>{
-              let v=r[k];
-              if(typeof v==="object"&&v!==null) v=JSON.stringify(v);
-              return `<td>${v??""}</td>`;
-            }).join("")+"</tr>";
-          });
-          div.innerHTML=html+"</table>";
-        });
-    }
-
     function renderChatHistory() {
-      const div=document.getElementById("chat-history");
-      div.innerHTML="";
-      const msgs=chatHistories[currentConvoId]||[];
-      if(!msgs.length){ div.innerHTML="<em>Brak wiadomości.</em>"; return; }
-      msgs.forEach(m=>{
-        div.innerHTML+=
-          `<div class="chat-bubble user-msg"><strong>Ty:</strong> ${m.prompt}</div>`+
+      const div = document.getElementById("chat-history");
+      div.innerHTML = "";
+      const msgs = chatHistories[currentConvoId] || [];
+      if (!msgs.length) {
+        div.innerHTML = "<em>Brak wiadomości.</em>";
+        return;
+      }
+      msgs.forEach(m => {
+        div.innerHTML +=
+          `<div class="chat-bubble user-msg"><strong>Ty:</strong> ${m.prompt}</div>` +
           `<div class="chat-bubble assistant-msg"><strong>Asystent:</strong> ${m.response}</div>`;
       });
     }
 
     function loadConversations() {
-      fetch(`${API_BASE}/get-conversations`, { method:"POST", credentials:"include" })
-        .then(res=>res.json())
-        .then(data=>{
-          const sel=document.getElementById("convo-select");
-          sel.innerHTML=`<option value="">➕ Nowa rozmowa</option>`;
-          if(data.code===1&&Array.isArray(data.message)){
-            data.message.forEach(conv=>{
-              // inicjalizujemy historię, jeśli jeszcze nie ma
-              if(!chatHistories.hasOwnProperty(conv.id)) chatHistories[conv.id]=conv.messages;
-              const o=new Option(`Konwersacja #${conv.id}`, conv.id);
+      fetch(`${API_BASE}/get-conversations`, { method: "POST", credentials: "include" })
+        .then(res => res.json())
+        .then(data => {
+          const sel = document.getElementById("convo-select");
+          sel.innerHTML = `<option value="">➕ Nowa rozmowa</option>`;
+          if (data.code === 1 && Array.isArray(data.message)) {
+            data.message.forEach(conv => {
+              if (!chatHistories.hasOwnProperty(conv.id)) chatHistories[conv.id] = conv.messages;
+              const o = new Option(`Konwersacja #${conv.id}`, conv.id);
               sel.appendChild(o);
             });
           }
-          // upewniamy się że mamy pustą historię dla nowej
-          if(!chatHistories.hasOwnProperty("")) chatHistories[""]=[];
-          sel.onchange=()=>{
-            currentConvoId=sel.value;
+          if (!chatHistories.hasOwnProperty("")) chatHistories[""] = [];
+          sel.onchange = () => {
+            currentConvoId = sel.value;
             renderChatHistory();
           };
-          currentConvoId="";
+          currentConvoId = "";
           renderChatHistory();
         });
     }
 
     function askAssistant(e) {
       e.preventDefault();
-      const inp=document.getElementById("prompt");
-      const txt=inp.value.trim();
-      if(!txt) return alert("Wpisz pytanie.");
+      const inp = document.getElementById("prompt");
+      const txt = inp.value.trim();
+      if (!txt) return alert("Wpisz pytanie.");
       fetch(`${API_BASE}/ask-assistant`, {
-        method:"POST", credentials:"include",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ prompt:txt, convo_id: currentConvoId||null })
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: txt, convo_id: currentConvoId || null })
       })
-      .then(res=>res.json())
-      .then(data=>{
-        if(data.code!==1) return alert(data.message);
-        const cid = data.conversation_id!=null ? data.conversation_id : currentConvoId;
-        // jeśli nowa konwersacja
-        if(!chatHistories.hasOwnProperty(cid)){
-          chatHistories[cid]=[];
-          const sel=document.getElementById("convo-select");
+      .then(res => res.json())
+      .then(data => {
+        if (data.code !== 1) return alert(data.message);
+        const cid = data.conversation_id != null ? data.conversation_id : currentConvoId;
+        if (!chatHistories.hasOwnProperty(cid)) {
+          chatHistories[cid] = [];
+          const sel = document.getElementById("convo-select");
           sel.add(new Option(`Konwersacja #${cid}`, cid));
-          sel.value=cid;
+          sel.value = cid;
         }
-        currentConvoId=cid;
-        chatHistories[cid].push({ prompt:txt, response:data.message });
-        inp.value="";
+        currentConvoId = cid;
+        chatHistories[cid].push({ prompt: txt, response: data.message });
+        inp.value = "";
         renderChatHistory();
       });
     }
 
-    // start
+    // Start
     loadConversations();
   </script>
 </body>
