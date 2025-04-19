@@ -22,7 +22,7 @@ class ExpenseType:
             "Zakupy",
             "Usługi",
             "Przelew dla osoby prywatnej",
-            "Ważna opłata",
+            "Opłata obowiązkowa",
             "Subskrypcja",
             "Inne",
         ]
@@ -42,7 +42,7 @@ class ExpenseType:
             "messages": [
                 {
                     "role": "system",
-                    "content": "Działasz jako API. Ja podaje ci nazwę transakcji lub przedmiotu i lokalizacje a ty na podstawie tego masz stwierdzić jaki to typ zakupu. Typy: jedzenie - 0, rozrywka - 1, transport - 2, zakupy - 3, usługi - 4, przelew dla osoby prywatnej - 5, ważna opłata - 6, subskrypcja - 7, inne - 8. Zwróc tylko jedną cyfrę NIC WIĘCEJ!!!, przemyśl swój wybór. ",
+                    "content": "Działasz jako API. Ja podaje ci nazwę transakcji lub przedmiotu i lokalizacje a ty na podstawie tego masz stwierdzić jaki to typ zakupu. Typy: jedzenie - 0, rozrywka - 1, transport - 2, zakupy - 3, usługi - 4, przelew dla osoby prywatnej - 5, oplata obowiazkowa - 6, subskrypcja - 7, inne - 8. Zwróc tylko jedną cyfrę NIC WIĘCEJ!!!, przemyśl swój wybór. ",
                 },
                 {"role": "user", "content": name + " Lokalizacja: " + location},
             ],
